@@ -20,7 +20,7 @@ if option == "Upload Template":
         st.success("File uploaded successfully!")
         st.sidebar.write("Go to the next page to view the template.")
         sleep(0.5)
-        st.switch_page("pages/2-forms.py")
+        st.switch_page("pages/2-metadata_forms.py")
 elif option == "Select existing template":
     st.write("Select a recent template:")
     templates = os.listdir(templates_dir)
@@ -29,4 +29,4 @@ elif option == "Select existing template":
         st.session_state["selected_template"] = os.path.join(templates_dir, selected_template)
         st.sidebar.write("Go to the next page to view the template.")
         if st.button('Validate'):
-            st.switch_page("pages/2-forms.py")
+            st.switch_page("pages/2-metadata_forms.py")
