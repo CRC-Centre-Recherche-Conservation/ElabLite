@@ -1,5 +1,6 @@
 import json
 import csv
+import streamlit as st
 
 class TemplatesReader:
     def __init__(self, file_path):
@@ -17,6 +18,7 @@ class TemplatesReader:
             raise ValueError("Unsupported file format")
         return reader.parse()
 
+    @st.cache
     def read_metadata(self):
         file_format = self.detect_format()
         if file_format == 'json':
