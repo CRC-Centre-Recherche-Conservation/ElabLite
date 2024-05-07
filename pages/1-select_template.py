@@ -6,7 +6,7 @@ from utils.manager import manage_temp_dir
 
 
 st.title("Upload or Select Template")
-option = st.sidebar.radio("Options", ["Upload Template", "Select recent template"])
+option = st.sidebar.radio("Options", ["Upload Template", "Select existing template"])
 
 templates_dir = manage_temp_dir()
 
@@ -20,13 +20,13 @@ if option == "Upload Template":
         st.success("File uploaded successfully!")
         st.sidebar.write("Go to the next page to view the template.")
         sleep(0.5)
-        st.switch_page("1-select_template.py")
-elif option == "Select recent template":
-    st.write("Select an old template:")
+        st.switch_page("pages/2-forms.py")
+elif option == "Select existing template":
+    st.write("Select a recent template:")
     templates = os.listdir(templates_dir)
     selected_template = st.selectbox("Select a template", templates)
     if selected_template:
         st.session_state["selected_template"] = os.path.join(templates_dir, selected_template)
         st.sidebar.write("Go to the next page to view the template.")
-        sleep(0.5)
-        st.switch_page("1-select_template.py")
+        if st.button('Validate'):
+            st.switch_page("pages/2-forms.py")

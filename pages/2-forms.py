@@ -24,6 +24,7 @@ def generate_form(metadata):
 st.title("View Template")
 if "selected_template" in st.session_state and os.path.exists(st.session_state["selected_template"]):
     reader = TemplatesReader(st.session_state["selected_template"])
+    st.info(reader)
     st.info(f"""You are using the template `{st.session_state["selected_template"]}`""")
 
     try:
