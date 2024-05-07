@@ -5,6 +5,7 @@ import streamlit as st
 class TemplatesReader:
     def __init__(self, file_path):
         self.file_path = file_path
+        self.file = self.read()
 
     def read(self):
         file_format = self.detect_format()
@@ -16,20 +17,10 @@ class TemplatesReader:
             reader = ELNTemplatesReader(self.file_path)
         else:
             raise ValueError("Unsupported file format")
-        return reader.parse()
+        return reader
 
-    @st.cache
     def read_metadata(self):
-        file_format = self.detect_format()
-        if file_format == 'json':
-            reader = JSONTemplatesReader(self.file_path)
-        elif file_format == 'csv':
-            reader = CSVTemplatesReader(self.file_path)
-        elif file_format == 'eln':
-            reader = ELNTemplatesReader(self.file_path)
-        else:
-            raise ValueError("Unsupported file format")
-        return reader.read_metadata()
+        return self.file.read_metadata()
 
     def detect_format(self):
         if self.file_path.endswith('.json'):
@@ -45,15 +36,15 @@ class JSONTemplatesReader:
 
     def __init__(self, file_path):
         self.file_path = file_path
+        self.template = self.parse()
 
     def parse(self):
         with open(self.file_path, 'r') as file:
             return json.load(file)
 
-    def read_metadata(self):
-        with open(self.file_path, 'r') as file:
-            data = json.load(file)
-            return data.get('metadata', {})
+    def read_metadata(self) -> dict:
+        st.info(json.loads(self.template['metadata']))
+        return json.loads(self.template['metadata'])
 
 class CSVTemplatesReader:
 
