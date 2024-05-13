@@ -1,8 +1,11 @@
 from datetime import date
 import os
 import streamlit as st
+import time
 
+from menu import menu
 from utils.parser import TemplatesReader
+
 
 def generate_form(metadata):
     #https://docs.streamlit.io/develop/api-reference/widgets -> do all fields for elab (https://doc.elabftw.net/metadata.html)
@@ -21,7 +24,8 @@ def generate_form(metadata):
             st.text_input(field_label, value=field_value, key=field_name, help=field_description)
         elif field_type == 'select':
             options = field_data.get('options', [])
-            st.selectbox(field_label, options, index=options.index(field_value) if field_value in options else 0, key=field_name, help=field_description)
+            st.selectbox(field_label, options, index=options.index(field_value) if field_value in options else 0,
+                         key=field_name, help=field_description)
         elif field_type == 'date':
             st.date_input(field_label, value=False, key=field_name, help=field_description)
         elif field_type == 'datetime-local':
@@ -42,14 +46,16 @@ def generate_form(metadata):
         else:
             raise st.error(f"Error form generation for {field_name, field_data}")
 
+
 # One template with st.text_area
 # and all parameters
 # add button step to step metadata 'presentation, metadata, download' (erdirect page) with progress bar ?
 
 st.title("View Template")
+menu()
+
 if "selected_template" in st.session_state and os.path.exists(st.session_state["selected_template"]):
     reader = TemplatesReader(st.session_state["selected_template"])
-    st.info(reader)
     st.info(f"""You are using the template `{st.session_state["selected_template"]}`""")
 
     try:
@@ -59,3 +65,7 @@ if "selected_template" in st.session_state and os.path.exists(st.session_state["
         st.error(f"Error: {e}")
 else:
     st.warning("Please select/upload a template on the first page.")
+    with st.spinner('Redirection'):
+        time.sleep(3)
+    st.switch_page("pages/1-select_template.py")
+

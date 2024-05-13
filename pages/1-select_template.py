@@ -2,12 +2,14 @@ import os
 from time import sleep
 import streamlit as st
 
+from menu import menu
 from utils.manager import manage_temp_dir
 
 
 st.title("Upload or Select Template")
+menu()
 option = st.sidebar.radio("Options", ["Upload Template", "Select existing template"])
-
+st.sidebar.divider()
 templates_dir = manage_temp_dir()
 
 if option == "Upload Template":
@@ -18,15 +20,12 @@ if option == "Upload Template":
         with open(st.session_state["selected_template"], "wb") as f:
             f.write(uploaded_file.getvalue())
         st.success("File uploaded successfully!")
-        st.sidebar.write("Go to the next page to view the template.")
-        sleep(0.5)
+        sleep(1.5)
         st.switch_page("pages/2-metadata_forms.py")
 elif option == "Select existing template":
     st.write("Select a recent template:")
     templates = os.listdir(templates_dir)
     selected_template = st.selectbox("Select a template", templates)
-    if selected_template:
+    if st.button('Validate'):
         st.session_state["selected_template"] = os.path.join(templates_dir, selected_template)
-        st.sidebar.write("Go to the next page to view the template.")
-        if st.button('Validate'):
-            st.switch_page("pages/2-metadata_forms.py")
+        st.switch_page("pages/2-metadata_forms.py")
