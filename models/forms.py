@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from dateutil.parser import parse, ParserError
 import streamlit as st
-from typing import List
+from typing import List, Union
 
 class BaseForms:
     pass
@@ -12,13 +12,15 @@ class BaseForms:
 class MetadataForms:
     name: str
     field_type: str
-    value: str = ''
+    value: Union[str, int, float]
     description: str = ''
     options: List[str] = field(default_factory=list)
     required: bool = False
     position: int = -1
     group_id: int = 0
     allow_multi_values: bool = False
+    unit: str = None
+    units: List[str] = field(default_factory=list)
 
     def render(self):
         """
@@ -78,14 +80,17 @@ class MetadataForms:
         st.time_input(label, value=self.value, key=self.name, help=self.description)
 
     def _render_number_field(self, label: str):
-        st.number_input(label, value=self.value, key=self.name, help=self.description)
+        col1, col2 = st.columns([8, 2])
+        with col1:
+            try:
+                st.number_input(label, value=float(self.value), key=self.name, help=self.description, step=None, format='%g')
+            except Exception:
+                st.number_input(label, value=float(0), key=self.name, help=self.description, step=None, format='%g')
+        with col2:
+            st.selectbox("Unit", self.units, index=self.units.index(self.unit), key='unit')
 
     def _render_url_field(self, label: str):
         st.text_input(label, value=self.value, key=self.name, help=self.description)
 
     def _render_radio_field(self, label: str):
         st.radio(label, value=self.value, key=self.name, help=self.description)
-
-# One template with st.text_area
-# and all parameters
-# add button step to step metadata 'presentation, metadata, download' (erdirect page) with progress bar ?
