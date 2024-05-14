@@ -1,6 +1,6 @@
 import streamlit as st
 
-from menu import menu
+from utils.menu import menu
 
 # APP
 st.set_page_config(page_title="ElabLite", )
