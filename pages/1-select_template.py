@@ -2,7 +2,7 @@ import os
 from time import sleep
 import streamlit as st
 
-from menu import menu
+from utils.menu import menu
 from utils.manager import manage_temp_dir
 
 
