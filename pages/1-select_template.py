@@ -23,9 +23,8 @@ if option == "Upload Template":
         sleep(1.5)
         st.switch_page("pages/2-metadata_forms.py")
 elif option == "Select existing template":
-    st.write("Select a recent template:")
     templates = os.listdir(templates_dir)
-    selected_template = st.selectbox("Select a template", templates)
+    selected_template = st.selectbox("Select a recent template", templates, index=None, placeholder="Choosing ...")
     if st.button('Validate'):
         st.session_state["selected_template"] = os.path.join(templates_dir, selected_template)
         st.switch_page("pages/2-metadata_forms.py")
