@@ -26,5 +26,8 @@ elif option == "Select existing template":
     templates = os.listdir(templates_dir)
     selected_template = st.selectbox("Select a recent template", templates, index=None, placeholder="Choosing ...")
     if st.button('Validate'):
-        st.session_state["selected_template"] = os.path.join(templates_dir, selected_template)
-        st.switch_page("pages/2-metadata_forms.py")
+        try:
+            st.session_state["selected_template"] = os.path.join(templates_dir, selected_template)
+            st.switch_page("pages/2-metadata_forms.py")
+        except TypeError:
+            st.warning("You need to select a template")
