@@ -27,8 +27,10 @@ class MetadataForms:
         """
         Rendering streamlit widgets according to type detected
         """
+
         field_label = self.name.replace('_', ' ')
         getattr(self, f"_render_{self.field_type}_field")(field_label)
+
 
     @classmethod
     def generate_form(cls, metadata):
@@ -54,7 +56,11 @@ class MetadataForms:
         st.text_input(label, value=self.value, help=self.description)
 
     def _render_select_field(self, label):
-        st.selectbox(label, self.options, index=self.options.index(self.value) if self.value in self.options else 0,
+        if self.allow_multi_values:
+            st.multiselect(label, self.options,
+                     help=self.description)
+        else:
+            st.selectbox(label, self.options, index=self.options.index(self.value) if self.value in self.options else 0,
                      help=self.description)
 
     def _render_date_field(self, label: str):
