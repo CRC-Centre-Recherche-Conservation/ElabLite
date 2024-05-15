@@ -27,7 +27,7 @@ class MetadataForms:
         """
         Rendering streamlit widgets according to type detected
         """
-        field_label = self.name.replace('_', ' ').title()
+        field_label = self.name.replace('_', ' ')
         getattr(self, f"_render_{self.field_type}_field")(field_label)
 
     @classmethod
