@@ -16,7 +16,7 @@ def step_metadata_base():
         date = st.date_input("Date", value=datetime.now())
         author = st.text_input("Author")
         commentary = st.text_area("Commentary")
-        submit_enabled = title and date and author
+        submit_enabled = all((title, date, author))
         st.session_state["submit_enabled"] = submit_enabled
 
 
@@ -26,7 +26,9 @@ def step_metadata_forms():
     try:
         template_metadata = reader.read_metadata()
         with st.container():
+            st.session_state.required_form = []
             MetadataForms.generate_form(template_metadata)
+            st.session_state["submit_enabled"] = all(st.session_state.required_form)
     except Exception as e:
         st.error(f"Error: {e}")
 
