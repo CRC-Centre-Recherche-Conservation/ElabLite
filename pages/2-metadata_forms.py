@@ -29,25 +29,25 @@ def step_metadata_forms():
             st.session_state.required_form = []
             MetadataForms.generate_form(template_metadata)
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
-            print(st.session_state.required_form)
-            print(st.session_state["submit_enabled"])
     except Exception as e:
         st.error(f"Error: {e}")
 
 
-def display_file_names(files):
+def display_file_metadata(files):
     file_names = [file.name for file in files]
     df = pd.DataFrame({"File Name": file_names})
     st.data_editor(df)
 
 def step_metadata_files():
+    if "files_metadata" not in st.session_state:
+        st.session_state["files_metadata"] = []
     st.header("Files metadata editor")
-
-    uploaded_files = st.file_uploader("Upload Files", accept_multiple_files=True)
-    # Display file names
-    if uploaded_files:
-        st.subheader("Uploaded File Names")
-        display_file_names(uploaded_files)
+    st.session_state["files_metadata"] = st.file_uploader("Upload Files", accept_multiple_files=True)
+    if st.session_state["files_metadata"]:
+        with st.spinner("Processing..."):
+            time.sleep(2)
+            st.subheader("Uploaded File Names")
+            display_file_metadata(st.session_state["files_metadata"])
 
 
 def step_metadata_download():
