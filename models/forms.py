@@ -51,13 +51,14 @@ class MetadataForms:
                 group_id = field_group_id
                 st.divider()
             # cleaning parameters
-            field_data.pop('type', None)
-            # execute
             if bool(st.session_state.form_data):
+                # get value in memory
                 value = st.session_state.form_data.get(field_name, field_data['value'])
             else:
                 value = field_data['value']
             field_data.pop('value', None)
+            field_data.pop('type', None)
+            # execute
             field_ = cls(field_name, field_type, value=value, **field_data)
             field_.render()
             st.session_state.form_data[field_name] = field_.value
@@ -65,11 +66,9 @@ class MetadataForms:
     def _render_text_field(self, label: str):
         self.value = st.text_input(label, value=self.value, help=self.description)
 
-    def _render_select_field(self, label):
+    def _render_select_field(self, label: str):
         if self.allow_multi_values:
-            self.value = st.multiselect(label, self.options,
-                     help=self.description)
-            st.info(self.value)
+            self.value = st.multiselect(label, self.options, default=self.value, help=self.description)
         else:
             self.value = st.selectbox(label, self.options, index=self.options.index(self.value) if self.value in self.options else 0,
                      help=self.description)
