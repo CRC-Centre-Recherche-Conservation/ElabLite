@@ -20,6 +20,7 @@ if option == "Upload Template":
         with open(st.session_state["selected_template"], "wb") as f:
             f.write(uploaded_file.getvalue())
         st.success("File uploaded successfully!")
+        st.session_state.form_data = {}
         sleep(1.5)
         st.switch_page("pages/2-metadata_forms.py")
 elif option == "Select existing template":
@@ -28,6 +29,7 @@ elif option == "Select existing template":
     if st.button('Validate'):
         try:
             st.session_state["selected_template"] = os.path.join(templates_dir, selected_template)
+            st.session_state.form_data = {}
             st.switch_page("pages/2-metadata_forms.py")
         except TypeError:
             st.warning("You need to select a template")
