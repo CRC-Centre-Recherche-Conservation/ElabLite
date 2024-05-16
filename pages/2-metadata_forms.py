@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 import streamlit as st
 import time
 from datetime import datetime
@@ -30,8 +31,19 @@ def step_metadata_forms():
         st.error(f"Error: {e}")
 
 
+def display_file_names(files):
+    file_names = [file.name for file in files]
+    df = pd.DataFrame({"File Name": file_names})
+    st.data_editor(df)
+
 def step_metadata_files():
     st.header("Files metadata editor")
+
+    uploaded_files = st.file_uploader("Upload Files", accept_multiple_files=True)
+    # Display file names
+    if uploaded_files:
+        st.subheader("Uploaded File Names")
+        display_file_names(uploaded_files)
 
 
 def step_metadata_download():
@@ -77,9 +89,6 @@ menu()
 
 # check templates
 if "selected_template" in st.session_state and os.path.exists(st.session_state["selected_template"]):
-    #  init step
-    if "step_metadata" not in st.session_state:
-        st.session_state["step_metadata"] = "step_metadata_base"
 
     # display page form
     display_forms()
