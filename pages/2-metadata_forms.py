@@ -71,11 +71,13 @@ if "selected_template" in st.session_state and os.path.exists(st.session_state["
     # buttons navigation
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("⏮️ Previous", on_click=previous_step):
-            pass
+        if st.session_state["step_metadata"] != "step_metadata_base":
+            if st.button("⏮️ Previous", on_click=previous_step):
+                pass
     with col2:
-        if st.button("Next ⏭️", on_click=next_step):
-            pass
+        if st.session_state["step_metadata"] != "step_metadata_download":
+            if st.button("Next ⏭️", on_click=next_step):
+                pass
 
 # redirection empty templates
 else:
