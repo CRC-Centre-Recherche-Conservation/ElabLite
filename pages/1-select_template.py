@@ -12,7 +12,7 @@ st.sidebar.divider()
 templates_dir = manage_temp_dir()
 
 if option == "Upload Template":
-    uploaded_file = st.file_uploader("Upload a file", type=["json", "csv", "eln"])
+    uploaded_file = st.file_uploader("Upload a file", type=["json", "csv", "eln"], accept_multiple_files=False)
     if uploaded_file is not None:
         st.session_state["selected_template"] = os.path.join(templates_dir, uploaded_file.name)
         # Save the uploaded file to the temporary directory
