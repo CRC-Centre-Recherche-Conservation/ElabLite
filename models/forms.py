@@ -87,7 +87,7 @@ class MetadataForms:
         self.value = st.checkbox(label, value=self.value, help=self.description)
 
     def _render_email_field(self, label: str):
-        self.value = st.text_input(label, value=self.value, help=self.description)
+        self.value = st.text_input(label, value=self.value, help=self.description, on_change=validate_email, args=(self.value,))
 
     def _render_time_field(self, label: str):
         self.value = st.time_input(label, value=self.value, help=self.description)
@@ -103,7 +103,8 @@ class MetadataForms:
             self.value = st.selectbox("Unit", self.units, index=self.units.index(self.unit))
 
     def _render_url_field(self, label: str):
-        self.value = st.text_input(label, value=self.value, help=self.description)
+        self.value = st.text_input(label, value=self.value, help=self.description, on_change=validate_url, args=(self.value,))
+
 
     def _render_radio_field(self, label: str):
         self.value = st.radio(label, value=self.value, help=self.description)
