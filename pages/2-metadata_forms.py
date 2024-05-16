@@ -29,6 +29,8 @@ def step_metadata_forms():
             st.session_state.required_form = []
             MetadataForms.generate_form(template_metadata)
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
+            print(st.session_state.required_form)
+            print(st.session_state["submit_enabled"])
     except Exception as e:
         st.error(f"Error: {e}")
 
@@ -104,6 +106,9 @@ if "selected_template" in st.session_state and os.path.exists(st.session_state["
     with col2:
         if st.session_state["step_metadata"] != "step_metadata_download":
             if st.button("Next ⏭️", on_click=next_step, disabled=not st.session_state["submit_enabled"]):
+                pass
+        elif st.session_state["step_metadata"] == "step_metadata_forms":
+            if st.button("Next ⏭️", on_click=next_step, disabled=not (st.session_state["submit_enabled"] and st.session_state["validation_error"])):
                 pass
 
 # redirection empty templates

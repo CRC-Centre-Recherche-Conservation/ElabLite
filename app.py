@@ -11,6 +11,8 @@ st.write(
 # init step metadata
 if "step_metadata" not in st.session_state:
     st.session_state["step_metadata"] = "step_metadata_base"
+if 'validation_error' not in st.session_state:
+    st.session_state.validation_error = True
 
 #SIDEBAR
 menu()
