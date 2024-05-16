@@ -1,6 +1,9 @@
 import json
 import csv
+import os
 import streamlit as st
+from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import Path as ZPath
 
 class TemplatesReader:
     def __init__(self, file_path):
@@ -43,7 +46,6 @@ class JSONTemplatesReader:
             return json.load(file)
 
     def read_metadata(self) -> dict:
-        st.info(json.loads(self.template['metadata']))
         return json.loads(self.template['metadata'])
 
 class CSVTemplatesReader:
@@ -64,13 +66,23 @@ class CSVTemplatesReader:
         return {}
 
 class ELNTemplatesReader:
+    METADATA_FILE = 'ro-crate-metadata.json'
 
     def __init__(self, file_path):
         self.file_path = file_path
+        self.template = self.parse()
 
     def parse(self):
-        # Placeholder for ELN parsing logic
-        return "ELN parsing not implemented yet"
+        try:
+            with ZipFile(self.file_path, "r", compression=ZIP_DEFLATED) as elnFile:
+                p = ZPath(elnFile)
+                dirName = sorted(p.iterdir())[0]
+                metadataJsonFile = dirName.joinpath(self.METADATA_FILE)
+                metadataContent = json.loads(metadataJsonFile.read_bytes())
+                st.info(metadataContent)
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+
 
     def read_metadata(self):
         # ELN does not support metadata, returning an empty dictionary
