@@ -39,6 +39,10 @@ class MetadataForms:
         """
         extra_fields = metadata.get('extra_fields', {})
         sorted_fields = sorted(extra_fields.items(), key=lambda x: x[1]['position'] if 'position' in x[1] else -1)
+
+        if 'form_data' not in st.session_state:
+            st.session_state.form_data = {}
+
         group_id = cls.group_id
         for field_name, field_data in sorted_fields:
             field_type = field_data.get('type', 'text')
@@ -49,51 +53,58 @@ class MetadataForms:
             # cleaning parameters
             field_data.pop('type', None)
             # execute
-            field_ = cls(field_name, field_type, **field_data)
+            if bool(st.session_state.form_data):
+                value = st.session_state.form_data.get(field_name, field_data['value'])
+            else:
+                value = field_data['value']
+            field_data.pop('value', None)
+            field_ = cls(field_name, field_type, value=value, **field_data)
             field_.render()
+            st.session_state.form_data[field_name] = field_.value
 
     def _render_text_field(self, label: str):
-        st.text_input(label, value=self.value, help=self.description)
+        self.value = st.text_input(label, value=self.value, help=self.description)
 
     def _render_select_field(self, label):
         if self.allow_multi_values:
-            st.multiselect(label, self.options,
+            self.value = st.multiselect(label, self.options,
                      help=self.description)
+            st.info(self.value)
         else:
-            st.selectbox(label, self.options, index=self.options.index(self.value) if self.value in self.options else 0,
+            self.value = st.selectbox(label, self.options, index=self.options.index(self.value) if self.value in self.options else 0,
                      help=self.description)
 
     def _render_date_field(self, label: str):
         try:
-            date_exp = parse(self.value)
-            st.date_input(label, value=date_exp, help=self.description)
+            date_exp = parse(str(self.value))
+            self.value = st.date_input(label, value=date_exp, help=self.description)
         except ParserError:
-            st.date_input(label, value=date.today(), help=self.description)
+            self.value = st.date_input(label, value=date.today(), help=self.description)
 
     def _render_datetime_local_field(self, label: str):
-        st.date_input(label, value=date.today(), help=self.description)
+        self.value = st.date_input(label, value=date.today(), help=self.description)
 
     def _render_checkbox_field(self, label: str):
-        st.checkbox(label, value=self.value, help=self.description)
+        self.value = st.checkbox(label, value=self.value, help=self.description)
 
     def _render_email_field(self, label: str):
-        st.text_input(label, value=self.value, help=self.description)
+        self.value = st.text_input(label, value=self.value, help=self.description)
 
     def _render_time_field(self, label: str):
-        st.time_input(label, value=self.value, help=self.description)
+        self.value = st.time_input(label, value=self.value, help=self.description)
 
     def _render_number_field(self, label: str):
         col1, col2 = st.columns([8, 2])
         with col1:
             try:
-                st.number_input(label, value=float(self.value), help=self.description, step=None, format='%g')
+                self.value = st.number_input(label, value=float(self.value), help=self.description, step=None, format='%g')
             except Exception:
-                st.number_input(label, value=float(0), help=self.description, step=None, format='%g')
+                self.value = st.number_input(label, value=float(0), help=self.description, step=None, format='%g')
         with col2:
-            st.selectbox("Unit", self.units, index=self.units.index(self.unit))
+            self.value = st.selectbox("Unit", self.units, index=self.units.index(self.unit))
 
     def _render_url_field(self, label: str):
-        st.text_input(label, value=self.value, help=self.description)
+        self.value = st.text_input(label, value=self.value, help=self.description)
 
     def _render_radio_field(self, label: str):
-        st.radio(label, value=self.value, help=self.description)
+        self.value = st.radio(label, value=self.value, help=self.description)
