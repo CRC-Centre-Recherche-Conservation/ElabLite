@@ -45,24 +45,23 @@ def upload_files():
         files = st.file_uploader("Upload Files", accept_multiple_files=True, key='upload_files')
         return files
     except MemoryError:
-        del files
+        del files,
         st.error("Failed to upload files: RAM usage exceeds threshold")
         return None
 
-
 def step_metadata_files():
     if "files_metadata" not in st.session_state:
-        st.session_state["files_metadata"] = []
+        st.session_state["files_metadata"] = None
 
     st.header("Files metadata editor")
     uploaded_files = upload_files()
 
-    if uploaded_files is not None:
+    with st.spinner("Processing dataframe..."):
+        while not uploaded_files:
+            time.sleep(1)
         file_names = [file.name for file in uploaded_files]
-        with st.spinner("Processing..."):
-            time.sleep(2)
-            if len(uploaded_files) >= 1:
-                st.session_state["files_metadata"] = file_names
+        st.session_state["files_metadata"] = file_names
+    if st.session_state["files_metadata"] is not None:
         st.subheader("Uploaded File Names")
         display_file_metadata(st.session_state["files_metadata"])
 
