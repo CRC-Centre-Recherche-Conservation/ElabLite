@@ -34,8 +34,12 @@ def step_metadata_forms():
         st.error(f"Error: {e}")
 
 
-def display_file_metadata(file_names):
-    df = pd.DataFrame({"File Name": file_names})
+def display_file_metadata(filenames: list):
+    form_data = st.session_state.form_data
+    df = pd.DataFrame([{'Filename': filenames[0]} | form_data], columns=['Filename', *form_data.keys()])
+    for filename in filenames[1:]:
+        row_data = {'Filename': filename} | form_data
+        df = pd.concat([df, pd.DataFrame([row_data], columns=['Filename', *form_data.keys()])], ignore_index=True)
     st.dataframe(df)
 
 
