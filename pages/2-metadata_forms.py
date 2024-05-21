@@ -7,6 +7,7 @@ from datetime import datetime
 from utils.menu import menu
 from models.forms import MetadataForms
 from utils.parser import TemplatesReader
+from utils.decorators import limit_ram_usage
 
 
 def step_metadata_base():
@@ -33,21 +34,37 @@ def step_metadata_forms():
         st.error(f"Error: {e}")
 
 
-def display_file_metadata(files):
-    file_names = [file.name for file in files]
+def display_file_metadata(file_names):
     df = pd.DataFrame({"File Name": file_names})
-    st.data_editor(df)
+    st.dataframe(df)
+
+
+@limit_ram_usage(90)
+def upload_files():
+    try:
+        files = st.file_uploader("Upload Files", accept_multiple_files=True, key='upload_files')
+        return files
+    except MemoryError:
+        del files
+        st.error("Failed to upload files: RAM usage exceeds threshold")
+        return None
+
 
 def step_metadata_files():
     if "files_metadata" not in st.session_state:
         st.session_state["files_metadata"] = []
+
     st.header("Files metadata editor")
-    st.session_state["files_metadata"] = st.file_uploader("Upload Files", accept_multiple_files=True)
-    if st.session_state["files_metadata"]:
+    uploaded_files = upload_files()
+
+    if uploaded_files is not None:
+        file_names = [file.name for file in uploaded_files]
         with st.spinner("Processing..."):
             time.sleep(2)
-            st.subheader("Uploaded File Names")
-            display_file_metadata(st.session_state["files_metadata"])
+            if len(uploaded_files) >= 1:
+                st.session_state["files_metadata"] = file_names
+        st.subheader("Uploaded File Names")
+        display_file_metadata(st.session_state["files_metadata"])
 
 
 def step_metadata_download():
