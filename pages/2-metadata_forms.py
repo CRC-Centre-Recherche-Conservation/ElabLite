@@ -10,6 +10,8 @@ from utils.parser import TemplatesReader
 from utils.decorators import limit_ram_usage
 
 
+### BASIC ###
+
 def step_metadata_base():
     st.header("Experience presentation")
     with st.container(border=True):
@@ -20,6 +22,8 @@ def step_metadata_base():
         submit_enabled = all((title, date, author))
         st.session_state["submit_enabled"] = submit_enabled
 
+
+### METADATA INSTRUMENTAL ###
 
 def step_metadata_forms():
     st.header("Experience presentation")
@@ -34,13 +38,18 @@ def step_metadata_forms():
         st.error(f"Error: {e}")
 
 
+### EDITING DATAFRAME FILE ###
+
 def display_file_metadata(filenames: list):
+    if "dataframe_metadata" not in st.session_state:
+        st.session_state["dataframe_metadata"] = None
+
     form_data = st.session_state.form_data
     df = pd.DataFrame([{'Filename': filenames[0]} | form_data], columns=['Filename', *form_data.keys()])
     for filename in filenames[1:]:
         row_data = {'Filename': filename} | form_data
         df = pd.concat([df, pd.DataFrame([row_data], columns=['Filename', *form_data.keys()])], ignore_index=True)
-    st.dataframe(df)
+    st.session_state["dataframe_metadata"] = st.data_editor(df)
 
 
 @limit_ram_usage(90)
@@ -52,6 +61,7 @@ def upload_files():
         del files,
         st.error("Failed to upload files: RAM usage exceeds threshold")
         return None
+
 
 def step_metadata_files():
     if "files_metadata" not in st.session_state:
@@ -68,11 +78,31 @@ def step_metadata_files():
     if st.session_state["files_metadata"] is not None:
         st.subheader("Uploaded File Names")
         display_file_metadata(st.session_state["files_metadata"])
+    st.session_state["submit_enabled"] = True
 
+
+### DOWNLOAD PAGE ###
+
+def generate_filename(df, selected_columns, include_columns):
+    filename_parts = []
+    for col, include in zip(selected_columns, include_columns):
+        if include:
+            filename_parts.append(col)
+    return "_".join(filename_parts)
 
 def step_metadata_download():
     st.header("Download metadata")
+    df = st.session_state["dataframe_metadata"]
+    st.info(df)
+    selected_columns = st.multiselect("Select columns to include in filename", df.columns.tolist())
+    include_columns = [st.checkbox(f"Include '{col}' in filename") for col in selected_columns]
 
+    if st.button("Generate Filename"):
+        filename = generate_filename(df, selected_columns, include_columns)
+        st.write("Generated Filename:", filename)
+
+
+### INTERN PAGE MANAGEMENT ###
 
 def display_forms():
     st.info(f"""You are using the template `{st.session_state["selected_template"]}`""")
@@ -128,7 +158,8 @@ if "selected_template" in st.session_state and os.path.exists(st.session_state["
             if st.button("Next ⏭️", on_click=next_step, disabled=not st.session_state["submit_enabled"]):
                 pass
         elif st.session_state["step_metadata"] == "step_metadata_forms":
-            if st.button("Next ⏭️", on_click=next_step, disabled=not (st.session_state["submit_enabled"] and st.session_state["validation_error"])):
+            if st.button("Next ⏭️", on_click=next_step,
+                         disabled=not (st.session_state["submit_enabled"] and st.session_state["validation_error"])):
                 pass
 
 # redirection empty templates
