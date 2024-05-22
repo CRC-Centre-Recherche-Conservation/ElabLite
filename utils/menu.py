@@ -1,6 +1,9 @@
 import streamlit as st
 
 def menu():
+    """
+    Menu sidebar
+    """
     st.sidebar.image('static/icons/logo.svg')
     st.sidebar.title("ElabLite")
     st.sidebar.page_link("app.py", label="Homepage")

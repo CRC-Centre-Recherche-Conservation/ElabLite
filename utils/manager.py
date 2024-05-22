@@ -2,7 +2,11 @@ import os
 import tempfile
 
 
-def manage_temp_dir():
+def manage_temp_dir() -> str:
+    """
+    Function to manage tmp dir templates/ and get the 10 files most recent and remove the rest
+    :return: str, path tmp/templates/
+    """
     temp_dir = tempfile.gettempdir()
     templates_dir = os.path.join(temp_dir, "templates")
     if not os.path.exists(templates_dir):
