@@ -1,5 +1,4 @@
 import logging
-import os
 import streamlit as st
 
 from utils.menu import menu
