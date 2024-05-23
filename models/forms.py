@@ -6,11 +6,6 @@ from typing import List, Union
 
 from models.validator import validate_email, validate_url
 
-
-class BaseForms:
-    pass
-
-
 @dataclass
 class MetadataForms:
     name: str

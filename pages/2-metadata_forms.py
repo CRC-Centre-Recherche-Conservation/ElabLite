@@ -13,6 +13,8 @@ from utils.decorators import limit_ram_usage
 ### BASIC ###
 
 def step_metadata_base():
+    if "metadata_base" not in st.session_state:
+        st.session_state["metadata_base"] = None
     st.header("Experience presentation")
     with st.container(border=True):
         title = st.text_input("Title", help="Title of the experience")
@@ -21,6 +23,7 @@ def step_metadata_base():
         commentary = st.text_area("Commentary")
         submit_enabled = all((title, date, author))
         st.session_state["submit_enabled"] = submit_enabled
+        st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary}
 
 
 ### METADATA INSTRUMENTAL ###
@@ -83,23 +86,24 @@ def step_metadata_files():
 
 ### DOWNLOAD PAGE ###
 
-def generate_filename(df, selected_columns, include_columns):
+def generate_filename(row, selected_columns):
     filename_parts = []
-    for col, include in zip(selected_columns, include_columns):
-        if include:
-            filename_parts.append(col)
-    return "_".join(filename_parts)
+    for col in selected_columns:
+        filename_parts.append(str(row[col]))
+
+    date = st.session_state['metadata_base']['date'].strftime('%Y%m%d')
+    return str(date) + "_" + "_".join(filename_parts)
 
 def step_metadata_download():
     st.header("Download metadata")
     df = st.session_state["dataframe_metadata"]
     st.info(df)
     selected_columns = st.multiselect("Select columns to include in filename", df.columns.tolist())
-    include_columns = [st.checkbox(f"Include '{col}' in filename") for col in selected_columns]
 
     if st.button("Generate Filename"):
-        filename = generate_filename(df, selected_columns, include_columns)
-        st.write("Generated Filename:", filename)
+        for index, row in df.iterrows():
+            filename = generate_filename(row, selected_columns)
+            st.write("Generated Filename for row {}: {}".format(index, filename))
 
 
 ### INTERN PAGE MANAGEMENT ###
