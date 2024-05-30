@@ -7,7 +7,6 @@ from datetime import datetime
 from utils.menu import menu
 from models.forms import MetadataForms
 from utils.parser import TemplatesReader
-from utils.decorators import limit_ram_usage
 
 
 ### BASIC ###
@@ -55,7 +54,6 @@ def display_file_metadata(filenames: list):
     st.session_state["dataframe_metadata"] = st.data_editor(df)
 
 
-@limit_ram_usage(90)
 def upload_files():
     try:
         files = st.file_uploader("Upload Files", accept_multiple_files=True, key='upload_files')
