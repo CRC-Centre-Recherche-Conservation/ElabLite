@@ -33,13 +33,16 @@ class MetadataForms:
         """
         Iteration generation forms
         """
-        extra_fields = metadata.get('extra_fields', {})
-        sorted_fields = sorted(extra_fields.items(), key=lambda x: x[1]['position'] if 'position' in x[1] else -1)
-        #var
+        # var
         if 'form_data' not in st.session_state:
             st.session_state.form_data = {}
         if 'required_form' not in st.session_state:
             st.session_state.required_form = []
+        if 'extra_fields' not in st.session_state:
+            st.session_state.extra_fields = {}
+
+        st.session_state['extra_fields'] = metadata.get('extra_fields', {})
+        sorted_fields = sorted(st.session_state['extra_fields'].items(), key=lambda x: x[1]['position'] if 'position' in x[1] else -1)
 
         group_id = cls.group_id
         for field_name, field_data in sorted_fields:
