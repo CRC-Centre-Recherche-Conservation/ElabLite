@@ -51,6 +51,13 @@ def display_file_metadata(filenames: list):
     for filename in filenames[1:]:
         row_data = {'Filename': filename} | form_data
         df = pd.concat([df, pd.DataFrame([row_data], columns=['Filename', *form_data.keys()])], ignore_index=True)
+
+    df['IdentifierAnalysis'] = ""
+    df['Object'] = ""
+    #ordering
+    columns_order = ['Filename', 'IdentifierAnalysis', 'Object', *form_data.keys()]
+    df = df[columns_order]
+
     st.session_state["dataframe_metadata"] = st.data_editor(df)
 
 
@@ -95,7 +102,6 @@ def generate_filename(row, selected_columns):
 def step_metadata_download():
     st.header("Download metadata")
     df = st.session_state["dataframe_metadata"]
-    st.info(df)
     selected_columns = st.multiselect("Select columns to include in filename", df.columns.tolist())
 
     if st.button("Generate Filename"):
