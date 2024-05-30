@@ -103,6 +103,10 @@ def generate_filename(row, selected_columns):
     date = st.session_state['metadata_base']['date'].strftime('%Y%m%d')
     return str(date) + "_" + "_".join(filename_parts)
 
+def mapping_experiences():
+    
+    pass
+
 def step_metadata_download():
     st.header("Download metadata")
     df = st.session_state["dataframe_metadata"]
@@ -115,6 +119,13 @@ def step_metadata_download():
             df['new_Filename'] = filename
 
     grouped = st.toggle('Grouping analysis ?')
+
+    st.download_button(
+        label="Download Zip",
+        data=df.to_csv().encode("utf-8"),
+        mime="application/zip",
+        disabled=True
+    )
 
 
 
