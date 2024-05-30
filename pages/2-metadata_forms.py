@@ -3,6 +3,8 @@ import pandas as pd
 import streamlit as st
 import time
 from datetime import datetime
+from streamlit_star_rating import st_star_rating
+from streamlit_tags import st_tags
 
 from utils.menu import menu
 from models.forms import MetadataForms
@@ -20,9 +22,11 @@ def step_metadata_base():
         date = st.date_input("Date", value=datetime.now())
         author = st.text_input("Author")
         commentary = st.text_area("Commentary")
+        tags = st_tags(label="tags", maxtags=8)
+        rating = st_star_rating(label="Rate you experience", maxValue=5, defaultValue=0)
         submit_enabled = all((title, date, author))
         st.session_state["submit_enabled"] = submit_enabled
-        st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary}
+        st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary, 'tags': tags, 'rating': rating}
 
 
 ### METADATA INSTRUMENTAL ###
@@ -105,9 +109,13 @@ def step_metadata_download():
     selected_columns = st.multiselect("Select columns to include in filename", df.columns.tolist())
 
     if st.button("Generate Filename"):
+        df['new_Filename'] = ''
         for index, row in df.iterrows():
             filename = generate_filename(row, selected_columns)
-            st.write("Generated Filename for row {}: {}".format(index, filename))
+            df['new_Filename'] = filename
+
+    grouped = st.toggle('Grouping analysis ?')
+
 
 
 ### INTERN PAGE MANAGEMENT ###
