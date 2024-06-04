@@ -6,8 +6,9 @@ from datetime import datetime
 from streamlit_star_rating import st_star_rating
 from streamlit_tags import st_tags
 
-from utils.menu import menu
 from models.forms import MetadataForms
+from utils.manager import generate_experience
+from utils.menu import menu
 from utils.parser import TemplatesReader
 
 
@@ -65,32 +66,30 @@ def display_file_metadata(filenames: list):
     st.session_state["dataframe_metadata"] = st.data_editor(df)
 
 
-def upload_files():
-    try:
-        files = st.file_uploader("Upload Files", accept_multiple_files=True, key='upload_files')
-        return files
-    except MemoryError:
-        del files,
-        st.error("Failed to upload files: RAM usage exceeds threshold")
-        return None
-
-
 def step_metadata_files():
-    if "files_metadata" not in st.session_state:
-        st.session_state["files_metadata"] = None
+    if "uploaded_files" not in st.session_state:
+        st.session_state["uploaded_files"] = []
+
+    st.session_state["submit_enabled"] = True
 
     st.header("Files metadata editor")
-    uploaded_files = upload_files()
+    uploaded_files = st.file_uploader("Upload Files", accept_multiple_files=True, key='upload_files')
+
+    if uploaded_files:
+        for uploaded_file in uploaded_files:
+            bytes_data = uploaded_file.read()
+            st.session_state['uploaded_files'].append({
+                'name': uploaded_file.name,
+                'data': bytes_data
+            })
 
     with st.spinner("Processing dataframe..."):
-        while not uploaded_files:
+        while not st.session_state['uploaded_files']:
             time.sleep(1)
-        file_names = [file.name for file in uploaded_files]
-        st.session_state["files_metadata"] = file_names
-    if st.session_state["files_metadata"] is not None:
+        file_names = [file['name'] for file in st.session_state['uploaded_files']]
+    if file_names is not None:
         st.subheader("Uploaded File Names")
-        display_file_metadata(st.session_state["files_metadata"])
-    st.session_state["submit_enabled"] = True
+        display_file_metadata(file_names)
 
 
 ### DOWNLOAD PAGE ###
@@ -103,14 +102,17 @@ def generate_filename(row, selected_columns):
     date = st.session_state['metadata_base']['date'].strftime('%Y%m%d')
     return str(date) + "_" + "_".join(filename_parts)
 
-def mapping_experiences():
-    
-    pass
-
 def step_metadata_download():
-    st.header("Download metadata")
+
+    if "grouped_exp" not in st.session_state:
+        st.session_state["grouped_exp"] = False
+
+    st.header("Download experiences")
+    st.subheader("Preparing ...")
     df = st.session_state["dataframe_metadata"]
     selected_columns = st.multiselect("Select columns to include in filename", df.columns.tolist())
+
+    disabled = True
 
     if st.button("Generate Filename"):
         df['new_Filename'] = ''
@@ -118,14 +120,31 @@ def step_metadata_download():
             filename = generate_filename(row, selected_columns)
             df['new_Filename'] = filename
 
-    grouped = st.toggle('Grouping analysis ?')
+    grouped = st.toggle('Grouping analysis ?', help='Activate to group all analyses in one experience')
 
-    st.download_button(
-        label="Download Zip",
-        data=df.to_csv().encode("utf-8"),
-        mime="application/zip",
-        disabled=True
-    )
+    if grouped:
+        st.session_state["grouped_exp"] = True
+    else:
+        st.session_state["grouped_exp"] = False
+
+    # st.info(st.session_state['metadata_base'])
+    # st.info(type(df))
+
+    st.subheader("Download ...")
+    if st.button("Generate files", type='primary'):
+        zip_buffer = generate_experience(base_mtda=st.session_state['metadata_base'],
+                                     exp_mtda=df,
+                                     grouped=st.session_state["grouped_exp"])
+        disabled = False
+
+
+        st.download_button(
+            label="Download Zip",
+            data=zip_buffer.getvalue(),
+            file_name=f"{datetime.today().strftime('%Y%m%d')}_experiences.zip",
+            mime="application/zip",
+            disabled=disabled
+        )
 
 
 

@@ -3,7 +3,10 @@ import datetime
 import os
 import zipfile
 from io import BytesIO
+from pandas import DataFrame
 from tempfile import NamedTemporaryFile, gettempdir
+from typing import Dict
+
 
 def manage_temp_dir() -> str:
     """
@@ -22,26 +25,28 @@ def manage_temp_dir() -> str:
     return templates_dir
 
 
-def generate_experience(filename: str, experiences: list):
-    headers = [
-        'date', 'title', 'body', 'category', 'category_title', 'category_color',
-        'status', 'status_title', 'status_color', 'custom_id', 'rating',
-        'metadata', 'tags'
-    ]
+def generate_experience(base_mtda: Dict, exp_mtda: DataFrame, grouped: bool):
+    headers = ['date', 'title', 'body', 'rating', 'metadata', 'tags']
 
     with NamedTemporaryFile(mode='w', newline='', delete=False, suffix='.csv', encoding='utf-8') as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerow(headers)
-        # looping writerow on experiences list ...
+        writer = csv.DictWriter(csv_file, fieldnames=headers)
+        writer.writeheader()
+        if grouped:
+            pass
+        else:
+            for row in exp_mtda.iterrows():
+                data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
+                        'rating': base_mtda['rating'], 'metadata': {'key': 'value'}, 'tags': base_mtda['tags']}
+                writer.writeheader(data)
 
         csv_filename = csv_file.name
 
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(csv_filename, arcname='experiences.csv')
+
     zip_buffer.seek(0)
 
     os.unlink(csv_file.name)
 
     return zip_buffer
-
