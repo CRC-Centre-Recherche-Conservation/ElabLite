@@ -110,9 +110,7 @@ def step_metadata_download():
     st.header("Download experiences")
     st.subheader("Preparing ...")
     df = st.session_state["dataframe_metadata"]
-    selected_columns = st.multiselect("Select columns to include in filename", df.columns.tolist())
-
-    disabled = True
+    selected_columns = st.multiselect("Select columns to include in filename (in order)", df.columns.tolist())
 
     if st.button("Generate Filename"):
         df['new_Filename'] = ''
@@ -148,14 +146,14 @@ def step_metadata_download():
             zip_buffer = zip_experience(csv_)
             time.sleep(2)
             status.update(label="Process complete!", state="complete", expanded=False)
-            disabled=False
+            st.session_state["submit_enabled"] = False
 
         st.download_button(
             label="Download Zip",
             data=zip_buffer.getvalue(),
             file_name=f"{datetime.today().strftime('%Y%m%d')}_experiences.zip",
             mime="application/zip",
-            disabled=disabled
+            disabled=st.session_state["submit_enabled"]
         )
 
 
