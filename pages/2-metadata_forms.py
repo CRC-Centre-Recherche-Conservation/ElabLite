@@ -115,46 +115,51 @@ def step_metadata_download():
     df = st.session_state["dataframe_metadata"]
     selected_columns = st.multiselect("Select columns to include in filename (in order)", df.columns.tolist())
 
-    if st.button("Generate Filename"):
-        df['new_Filename'] = ''
-        for index, row in df.iterrows():
-            filename = generate_filename(row, selected_columns)
-            df['new_Filename'] = filename
-        alert = st.toast("Success!", icon='🎉')
-        time.sleep(2)
-        alert.empty()
-
-    st.subheader("Download ...")
-
-    grouped = st.toggle('Grouping analysis ?', help='Activate to group all analyses in one experience')
-
-    if grouped:
-        st.session_state["grouped_exp"] = True
-    else:
-        st.session_state["grouped_exp"] = False
-
-    if st.button("Generate files", type='primary'):
-        with st.status("Generating data...") as status:
-            st.write("Generating CSV...")
-            csv_ = generate_csv(base_mtda=st.session_state['metadata_base'],
-                                df_mtda=df,
-                                grouped=st.session_state["grouped_exp"])
+    col1, col2 = st.columns([4, 7])
+    with col1:
+        if st.button("Validation filename"):
+            df['new_Filename'] = ''
+            for index, row in df.iterrows():
+                filename = generate_filename(row, selected_columns)
+                df['new_Filename'] = filename
+            alert = st.toast("Success!", icon='🎉')
+            with col2:
+                alert_exemple = st.caption(f"Example: {df['new_Filename'].iloc[0]}")
             time.sleep(2)
-            st.write("Renaming files...")
-            time.sleep(1)
-            st.write("Zipping...")
-            zip_buffer = zip_experience(csv_)
-            time.sleep(2)
-            status.update(label="Process complete!", state="complete", expanded=False)
-            st.session_state["submit_enabled"] = False
+            alert.empty(); alert_exemple.empty()
 
-        st.download_button(
-            label="Download Zip",
-            data=zip_buffer.getvalue(),
-            file_name=f"{datetime.today().strftime('%Y%m%d')}_experiences.zip",
-            mime="application/zip",
-            disabled=st.session_state["submit_enabled"]
-        )
+    with st.container():
+        st.subheader("Download ...")
+
+        grouped = st.toggle('Grouping analysis ?', help='Activate to group all analyses in one experience')
+
+        if grouped:
+            st.session_state["grouped_exp"] = True
+        else:
+            st.session_state["grouped_exp"] = False
+
+        if st.button("Generate files", type='primary'):
+            with st.status("Generating data...") as status:
+                st.write("Generating CSV...")
+                csv_ = generate_csv(base_mtda=st.session_state['metadata_base'],
+                                    df_mtda=df,
+                                    grouped=st.session_state["grouped_exp"])
+                time.sleep(2)
+                st.write("Renaming files...")
+                time.sleep(1)
+                st.write("Zipping...")
+                zip_buffer = zip_experience(csv_)
+                time.sleep(2)
+                status.update(label="Process complete!", state="complete", expanded=False)
+                st.session_state["submit_enabled"] = False
+
+            st.download_button(
+                label="Download Zip",
+                data=zip_buffer.getvalue(),
+                file_name=f"{datetime.today().strftime('%Y%m%d')}_experiences.zip",
+                mime="application/zip",
+                disabled=st.session_state["submit_enabled"]
+            )
 
 
 ### INTERN PAGE MANAGEMENT ###
