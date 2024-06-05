@@ -102,8 +102,10 @@ def generate_filename(row, selected_columns):
     for col in selected_columns:
         filename_parts.append(str(row[col]))
 
+    _, extension = os.path.splitext(row['Filename'])
+
     date = st.session_state['metadata_base']['date'].strftime('%Y%m%d')
-    return str(date) + "_" + "_".join(filename_parts)
+    return str(date) + "_" + "_".join(filename_parts) + extension
 
 
 def step_metadata_download():
