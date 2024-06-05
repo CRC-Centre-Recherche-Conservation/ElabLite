@@ -26,9 +26,8 @@ def manage_temp_dir() -> str:
     return templates_dir
 
 
-def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool):
+def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
     headers = ['date', 'title', 'body', 'rating', 'metadata', 'tags']
-
     with NamedTemporaryFile(mode='w', newline='', delete=False, suffix='.csv', encoding='utf-8') as csv_file:
         metadata = st.session_state['template_metadata']
         writer = csv.DictWriter(csv_file, fieldnames=headers)
@@ -48,19 +47,26 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool):
                 data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
                         'rating': base_mtda['rating'], 'metadata': metadata, 'tags': base_mtda['tags']}
                 writer.writerow(data)
-
         csv_filename = csv_file.name
-
     return csv_filename
 
 
-def zip_experience(csv_filename: str):
+def files_management(uploaded_files: Dict, df_mtda: DataFrame, grouped: bool) -> Dict:
+    new_dict = {}
+    if grouped:
+        for key, new_filename in zip(df_mtda['Filename'], df_mtda['new_Filename']):
+            if key in uploaded_files:
+                new_dict['data'] = {new_filename: uploaded_files[key]}
+    else:
+        for idx, row in df_mtda.iterrows():
+            new_dict[row['new_title']] = {row['new_Filename']: uploaded_files[row['Filename']]}
+    return new_dict
+
+
+def zip_experience(csv_filename: str) -> BytesIO:
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(csv_filename, arcname='experiences.csv')
-
     zip_buffer.seek(0)
-
     os.unlink(csv_filename)
-
     return zip_buffer

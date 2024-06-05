@@ -7,7 +7,7 @@ from streamlit_star_rating import st_star_rating
 from streamlit_tags import st_tags
 
 from models.forms import MetadataForms
-from utils.manager import generate_csv, zip_experience
+from utils.manager import generate_csv, zip_experience, files_management
 from utils.menu import menu
 from utils.parser import TemplatesReader
 
@@ -71,7 +71,7 @@ def display_file_metadata(filenames: list):
 
 def step_metadata_files():
     if "uploaded_files" not in st.session_state:
-        st.session_state["uploaded_files"] = []
+        st.session_state["uploaded_files"] = {}
 
     st.session_state["submit_enabled"] = True
 
@@ -81,10 +81,7 @@ def step_metadata_files():
     if uploaded_files:
         for uploaded_file in uploaded_files:
             bytes_data = uploaded_file.read()
-            st.session_state['uploaded_files'].append({
-                'name': uploaded_file.name,
-                'data': bytes_data
-            })
+            st.session_state['uploaded_files'][uploaded_file.name] = bytes_data
 
     with st.spinner("Processing dataframe..."):
         while not uploaded_files:
@@ -108,6 +105,19 @@ def generate_filename(row, selected_columns):
     return str(date) + "_" + "_".join(filename_parts) + extension
 
 
+def generate_newtitle(row, title) -> str:
+    """
+    to generate a title distinction if analysis not grouped
+    :param row:
+    :param title:
+    :return:
+    """
+    if pd.notnull(row['IdentifierAnalysis']) or pd.notnull(row['Object']):
+        return f"{title} -- {row['IdentifierAnalysis']}_{row['Object']}"
+    else:
+        return f"{title} -- {row.idx}"
+
+
 def step_metadata_download():
     if "grouped_exp" not in st.session_state:
         st.session_state["grouped_exp"] = False
@@ -115,7 +125,10 @@ def step_metadata_download():
     st.header("Download experiences")
     st.subheader("Preparing ...")
     df = st.session_state["dataframe_metadata"]
-    selected_columns = st.multiselect("Select columns to include in filename (in order)", df.columns.tolist())
+    df['new_title'] = df.apply(lambda x: generate_newtitle(x, st.session_state['metadata_base']['title']), axis=1) # Generate alternative titles non-bundled
+
+    exclude_columns = ['Filename', 'new_title', 'new_Filename']
+    selected_columns = st.multiselect("Select columns to include in filename (in order)", [col for col in df.columns.tolist() if col not in exclude_columns])
 
     col1, col2 = st.columns([4, 7])
     with col1:
@@ -124,21 +137,17 @@ def step_metadata_download():
             for index, row in df.iterrows():
                 filename = generate_filename(row, selected_columns)
                 df['new_Filename'] = filename
-            alert = st.toast("Success!", icon='🎉')
+            st.toast("Success!", icon='🎉')
             with col2:
-                alert_exemple = st.caption(f"Example: {df['new_Filename'].iloc[0]}")
+                alert = st.caption(f"Example: {df['new_Filename'].iloc[0]}")
             time.sleep(2)
-            alert.empty(); alert_exemple.empty()
+            alert.empty()
 
     with st.container():
         st.subheader("Download ...")
 
-        grouped = st.toggle('Grouping analysis ?', help='Activate to group all analyses in one experience')
-
-        if grouped:
-            st.session_state["grouped_exp"] = True
-        else:
-            st.session_state["grouped_exp"] = False
+        st.session_state["grouped_exp"] = st.toggle('Grouping analysis ?',
+                                                    help='Activate to group all analyses in one experience')
 
         if st.button("Generate files", type='primary'):
             with st.status("Generating data...") as status:
