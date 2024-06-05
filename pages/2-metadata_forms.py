@@ -27,19 +27,22 @@ def step_metadata_base():
         rating = st_star_rating(label="Rate you experience", maxValue=5, defaultValue=0)
         submit_enabled = all((title, date, author))
         st.session_state["submit_enabled"] = submit_enabled
-        st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary, 'tags': tags, 'rating': rating}
+        st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary,
+                                             'tags': tags, 'rating': rating}
 
 
 ### METADATA INSTRUMENTAL ###
 
 def step_metadata_forms():
+    if "template_metadata" not in st.session_state:
+        st.session_state["template_metadata"] = None
     st.header("Experience presentation")
     reader = TemplatesReader(st.session_state["selected_template"])
     try:
-        template_metadata = reader.read_metadata()
+        st.session_state['template_metadata'] = reader.read_metadata()
         with st.container():
             st.session_state.required_form = []
-            MetadataForms.generate_form(template_metadata)
+            MetadataForms.generate_form(st.session_state['template_metadata'])
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
     except Exception as e:
         st.error(f"Error: {e}")
@@ -102,8 +105,8 @@ def generate_filename(row, selected_columns):
     date = st.session_state['metadata_base']['date'].strftime('%Y%m%d')
     return str(date) + "_" + "_".join(filename_parts)
 
-def step_metadata_download():
 
+def step_metadata_download():
     if "grouped_exp" not in st.session_state:
         st.session_state["grouped_exp"] = False
 
@@ -130,15 +133,12 @@ def step_metadata_download():
     else:
         st.session_state["grouped_exp"] = False
 
-    # st.info(st.session_state['metadata_base'])
-    # st.info(type(df))
-
     if st.button("Generate files", type='primary'):
         with st.status("Generating data...") as status:
             st.write("Generating CSV...")
             csv_ = generate_csv(base_mtda=st.session_state['metadata_base'],
-                         exp_mtda=df,
-                         grouped=st.session_state["grouped_exp"])
+                                df_mtda=df,
+                                grouped=st.session_state["grouped_exp"])
             time.sleep(2)
             st.write("Renaming files...")
             time.sleep(1)
@@ -155,7 +155,6 @@ def step_metadata_download():
             mime="application/zip",
             disabled=st.session_state["submit_enabled"]
         )
-
 
 
 ### INTERN PAGE MANAGEMENT ###

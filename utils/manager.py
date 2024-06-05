@@ -1,6 +1,7 @@
 import csv
 import datetime
 import os
+import streamlit as st
 import zipfile
 from io import BytesIO
 from pandas import DataFrame
@@ -24,18 +25,22 @@ def manage_temp_dir() -> str:
         templates.pop(0)
     return templates_dir
 
-def generate_csv(base_mtda: Dict, exp_mtda: DataFrame, grouped: bool):
+def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool):
     headers = ['date', 'title', 'body', 'rating', 'metadata', 'tags']
 
     with NamedTemporaryFile(mode='w', newline='', delete=False, suffix='.csv', encoding='utf-8') as csv_file:
+        metadata = st.session_state['template_metadata']
         writer = csv.DictWriter(csv_file, fieldnames=headers)
         writer.writeheader()
         if grouped:
             pass
         else:
-            for row in exp_mtda.iterrows():
+            for idx, row in df_mtda.iterrows():
+                for col in df_mtda.columns:
+                    if col in metadata['extra_fields']:
+                        metadata['extra_fields'][col]['value'] = row[col]
                 data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
-                        'rating': base_mtda['rating'], 'metadata': {'key': 'value'}, 'tags': base_mtda['tags']}
+                        'rating': base_mtda['rating'], 'metadata': metadata, 'tags': base_mtda['tags']}
                 writer.writerow(data)
 
         csv_filename = csv_file.name
