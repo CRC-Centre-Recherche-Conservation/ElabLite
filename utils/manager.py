@@ -24,8 +24,7 @@ def manage_temp_dir() -> str:
         templates.pop(0)
     return templates_dir
 
-
-def generate_experience(base_mtda: Dict, exp_mtda: DataFrame, grouped: bool):
+def generate_csv(base_mtda: Dict, exp_mtda: DataFrame, grouped: bool):
     headers = ['date', 'title', 'body', 'rating', 'metadata', 'tags']
 
     with NamedTemporaryFile(mode='w', newline='', delete=False, suffix='.csv', encoding='utf-8') as csv_file:
@@ -37,16 +36,19 @@ def generate_experience(base_mtda: Dict, exp_mtda: DataFrame, grouped: bool):
             for row in exp_mtda.iterrows():
                 data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
                         'rating': base_mtda['rating'], 'metadata': {'key': 'value'}, 'tags': base_mtda['tags']}
-                writer.writeheader(data)
+                writer.writerow(data)
 
         csv_filename = csv_file.name
 
+    return csv_filename
+
+def zip_experience(csv_filename: str):
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(csv_filename, arcname='experiences.csv')
 
     zip_buffer.seek(0)
 
-    os.unlink(csv_file.name)
+    os.unlink(csv_filename)
 
     return zip_buffer

@@ -7,7 +7,7 @@ from streamlit_star_rating import st_star_rating
 from streamlit_tags import st_tags
 
 from models.forms import MetadataForms
-from utils.manager import generate_experience
+from utils.manager import generate_csv, zip_experience
 from utils.menu import menu
 from utils.parser import TemplatesReader
 
@@ -84,9 +84,9 @@ def step_metadata_files():
             })
 
     with st.spinner("Processing dataframe..."):
-        while not st.session_state['uploaded_files']:
+        while not uploaded_files:
             time.sleep(1)
-        file_names = [file['name'] for file in st.session_state['uploaded_files']]
+        file_names = [file.name for file in uploaded_files]
     if file_names is not None:
         st.subheader("Uploaded File Names")
         display_file_metadata(file_names)
@@ -119,6 +119,11 @@ def step_metadata_download():
         for index, row in df.iterrows():
             filename = generate_filename(row, selected_columns)
             df['new_Filename'] = filename
+        alert = st.toast("Success!", icon='🎉')
+        time.sleep(2)
+        alert.empty()
+
+    st.subheader("Download ...")
 
     grouped = st.toggle('Grouping analysis ?', help='Activate to group all analyses in one experience')
 
@@ -130,13 +135,20 @@ def step_metadata_download():
     # st.info(st.session_state['metadata_base'])
     # st.info(type(df))
 
-    st.subheader("Download ...")
     if st.button("Generate files", type='primary'):
-        zip_buffer = generate_experience(base_mtda=st.session_state['metadata_base'],
-                                     exp_mtda=df,
-                                     grouped=st.session_state["grouped_exp"])
-        disabled = False
-
+        with st.status("Generating data...") as status:
+            st.write("Generating CSV...")
+            csv_ = generate_csv(base_mtda=st.session_state['metadata_base'],
+                         exp_mtda=df,
+                         grouped=st.session_state["grouped_exp"])
+            time.sleep(2)
+            st.write("Renaming files...")
+            time.sleep(1)
+            st.write("Zipping...")
+            zip_buffer = zip_experience(csv_)
+            time.sleep(2)
+            status.update(label="Process complete!", state="complete", expanded=False)
+            disabled=False
 
         st.download_button(
             label="Download Zip",
