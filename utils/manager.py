@@ -25,6 +25,7 @@ def manage_temp_dir() -> str:
         templates.pop(0)
     return templates_dir
 
+
 def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool):
     headers = ['date', 'title', 'body', 'rating', 'metadata', 'tags']
 
@@ -33,7 +34,12 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool):
         writer = csv.DictWriter(csv_file, fieldnames=headers)
         writer.writeheader()
         if grouped:
-            pass
+            for col in df_mtda.columns:
+                if col in metadata['extra_fields']:
+                    metadata['extra_fields'][col]['value'] = df_mtda[col].iloc[0]
+            data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
+                    'rating': base_mtda['rating'], 'metadata': metadata, 'tags': base_mtda['tags']}
+            writer.writerow(data)
         else:
             for idx, row in df_mtda.iterrows():
                 for col in df_mtda.columns:
@@ -46,6 +52,7 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool):
         csv_filename = csv_file.name
 
     return csv_filename
+
 
 def zip_experience(csv_filename: str):
     zip_buffer = BytesIO()
