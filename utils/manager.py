@@ -106,6 +106,15 @@ def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, group
         new_dict = files_management(uploaded_files, df_mtda, grouped=False)
     """
     new_dict = {}
+    # Keep Filename
+    if 'new_Filename' not in df_mtda.columns:
+        if grouped:
+            new_dict['data'] = uploaded_files
+            return new_dict
+        else:
+            for idx, row in df_mtda.iterrows():
+                new_dict[row['new_title']] = {row['Filename']: uploaded_files[row['Filename']]}
+    # New Filename
     if grouped:
         for key, new_filename in zip(df_mtda['Filename'], df_mtda['new_Filename']):
             if key in uploaded_files:
