@@ -29,8 +29,8 @@ jobs:
       run: |
         mkdir -p badges
         pylint_score=$(find . -name "*.py" | xargs pylint --output-format=text | grep -oP 'Your code has been rated at \K([0-9.]+)')
-        echo "pylint_score=$pylint_score" >> $PYLINT_OUTPUT
-        anybadge --value=${{ $PYLINT_OUTPUT }} --file=badges/quality.svg --label=Pylint --color=#76b947 --overwrite --template=${{ steps.get.outputs.file }}
+        echo "pylint_score=$pylint_score" >> $GITHUB_ENV
+        anybadge --value=${{ steps.pylint.outputs.pylint_score }} --file=badges/quality.svg --label=Pylint --color=#76b947 --overwrite --template=${{ steps.pylint.outputs.file }}
 
     - name: Commit Changes
       if: ${{ steps.pylint.outputs.pylint_score != '' }}
