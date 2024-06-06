@@ -63,10 +63,14 @@ def files_management(uploaded_files: Dict, df_mtda: DataFrame, grouped: bool) ->
     return new_dict
 
 
-def zip_experience(csv_filename: str) -> BytesIO:
+def zip_experience(csv_filename: str, uploaded_files: Dict) -> BytesIO:
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(csv_filename, arcname='experiences.csv')
+        for folder_name, files in uploaded_files.items():
+            for file_name, file_data in files.items():
+                file_path = os.path.join(folder_name, file_name)
+                zip_file.writestr(file_path, file_data)
     zip_buffer.seek(0)
     os.unlink(csv_filename)
     return zip_buffer

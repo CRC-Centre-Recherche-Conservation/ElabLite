@@ -154,9 +154,13 @@ def step_metadata_download():
                                     grouped=st.session_state["grouped_exp"])
                 time.sleep(2)
                 st.write("Renaming files...")
+                uploaded_files_ = files_management(uploaded_files=st.session_state["uploaded_files"],
+                                                   df_mtda=df,
+                                                   grouped=st.session_state["grouped_exp"])
                 time.sleep(1)
                 st.write("Zipping...")
-                zip_buffer = zip_experience(csv_)
+                zip_buffer = zip_experience(csv_, uploaded_files_)
+                del uploaded_files_, csv_
                 time.sleep(2)
                 status.update(label="Process complete!", state="complete", expanded=False)
                 st.session_state["submit_enabled"] = False
