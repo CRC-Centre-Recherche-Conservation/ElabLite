@@ -116,7 +116,7 @@ def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, group
     return new_dict
 
 
-def zip_experience(csv_filename: str, uploaded_files: Dict[str, bytes]) -> BytesIO:
+def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]]) -> BytesIO:
     """
     Creates a zip archive containing a CSV file and additional uploaded files.
 
