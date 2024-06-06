@@ -61,9 +61,9 @@ def display_file_metadata(filenames: list):
         df = pd.concat([df, pd.DataFrame([row_data], columns=['Filename', *form_data.keys()])], ignore_index=True)
 
     df['IdentifierAnalysis'] = ""
-    df['Object'] = ""
+    df['Object/Sample'] = ""
     #ordering
-    columns_order = ['Filename', 'IdentifierAnalysis', 'Object', *form_data.keys()]
+    columns_order = ['Filename', 'IdentifierAnalysis', 'Object/Sample', *form_data.keys()]
     df = df[columns_order]
 
     st.session_state["dataframe_metadata"] = st.data_editor(df)
@@ -112,8 +112,8 @@ def generate_newtitle(row, title) -> str:
     :param title:
     :return:
     """
-    if pd.notnull(row['IdentifierAnalysis']) or pd.notnull(row['Object']):
-        return f"{title} -- {row['IdentifierAnalysis']}_{row['Object']}"
+    if pd.notnull(row['IdentifierAnalysis']) or pd.notnull(row['Object/Sample']):
+        return f"{title} -- {row['IdentifierAnalysis']}_{row['Object/Sample']}"
     else:
         return f"{title} -- {row.idx}"
 
