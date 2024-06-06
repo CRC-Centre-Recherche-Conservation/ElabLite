@@ -210,7 +210,7 @@ def previous_step():
 
 ### PAGE ###
 
-st.title("View Template")
+st.title("Metadata Generator")
 menu()
 
 # check templates
