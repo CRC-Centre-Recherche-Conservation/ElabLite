@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from pandas import Series as SeriesType
 import streamlit as st
 import time
 from datetime import datetime
@@ -15,6 +16,7 @@ from utils.parser import TemplatesReader
 ### BASIC ###
 
 def step_metadata_base():
+    """Step 1 page - Base forms experience"""
     if "metadata_base" not in st.session_state:
         st.session_state["metadata_base"] = None
     st.header("Experience presentation")
@@ -34,6 +36,7 @@ def step_metadata_base():
 ### METADATA INSTRUMENTAL ###
 
 def step_metadata_forms():
+    """Step 2 page - Metadata forms instrumental"""
     if "template_metadata" not in st.session_state:
         st.session_state["template_metadata"] = None
     st.header("Experience presentation")
@@ -51,6 +54,15 @@ def step_metadata_forms():
 ### EDITING DATAFRAME FILE ###
 
 def display_file_metadata(filenames: list):
+    """
+        Displays metadata for a list of filenames in a Streamlit data editor.
+
+        Parameters:
+        filenames (list): A list of filenames for which metadata is to be displayed.
+
+        Returns:
+        None
+    """
     if "dataframe_metadata" not in st.session_state:
         st.session_state["dataframe_metadata"] = None
 
@@ -70,6 +82,7 @@ def display_file_metadata(filenames: list):
 
 
 def step_metadata_files():
+    """Step 3 page - Manage metadata with datafiles files"""
     if "uploaded_files" not in st.session_state:
         st.session_state["uploaded_files"] = {}
 
@@ -94,7 +107,17 @@ def step_metadata_files():
 
 ### DOWNLOAD PAGE ###
 
-def generate_filename(row, selected_columns):
+def generate_filename(row: SeriesType, selected_columns: list) -> str:
+    """
+        Generates a filename based on selected columns from a DataFrame row and adds a date prefix.
+
+        Parameters:
+        row (pandas.Series): A row of data from a DataFrame.
+        selected_columns (list): A list of column names to be included in the filename.
+
+        Returns:
+        str: The generated filename.
+    """
     filename_parts = []
     for col in selected_columns:
         filename_parts.append(str(row[col]))
@@ -105,12 +128,16 @@ def generate_filename(row, selected_columns):
     return str(date) + "_" + "_".join(filename_parts) + extension
 
 
-def generate_newtitle(row, title) -> str:
+def generate_newtitle(row: SeriesType, title: str) -> str:
     """
-    to generate a title distinction if analysis not grouped
-    :param row:
-    :param title:
-    :return:
+    Generates a new title based on conditions.
+
+    Parameters:
+    row (pandas.Series): A row of data from the DataFrame.
+    title (str): The base title used for generating new titles.
+
+    Returns:
+    str: A new title generated based on conditions.
     """
     if pd.notnull(row['IdentifierAnalysis']) or pd.notnull(row['Object/Sample']):
         return f"{title} -- {row['IdentifierAnalysis']}_{row['Object/Sample']}"
@@ -119,6 +146,7 @@ def generate_newtitle(row, title) -> str:
 
 
 def step_metadata_download():
+    """Step 4 page - Generate new filenameDownload metadata"""
     if "grouped_exp" not in st.session_state:
         st.session_state["grouped_exp"] = False
 
@@ -177,6 +205,9 @@ def step_metadata_download():
 ### INTERN PAGE MANAGEMENT ###
 
 def display_forms():
+    """
+    Displays forms based on the current step in the application flow.
+    """
     st.info(f"""You are using the template `{st.session_state["selected_template"]}`""")
     current_step = st.session_state["step_metadata"]
     st.session_state["submit_enabled"] = False
@@ -191,6 +222,9 @@ def display_forms():
 
 
 def next_step():
+    """
+    Moves to the next step in the metadata page.
+    """
     if st.session_state["step_metadata"] == "step_metadata_base":
         st.session_state["step_metadata"] = "step_metadata_forms"
     elif st.session_state["step_metadata"] == "step_metadata_forms":
@@ -200,6 +234,9 @@ def next_step():
 
 
 def previous_step():
+    """
+    Moves to the previous step in the metadata page.
+    """
     if st.session_state["step_metadata"] == "step_metadata_forms":
         st.session_state["step_metadata"] = "step_metadata_base"
     elif st.session_state["step_metadata"] == "step_metadata_files":
