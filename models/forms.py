@@ -8,6 +8,26 @@ from models.validator import validate_email, validate_url
 
 @dataclass
 class MetadataForms:
+    """
+        A class to represent metadata forms with various attributes.
+
+        Attributes:
+            name (str): The name of the metadata field.
+            field_type (str): The type of the metadata field (e.g., 'text', 'number').
+            value (Union[str, int, float]): The value of the metadata field.
+            description (str, optional): A description of the metadata field. Defaults to ''.
+            options (List[str], optional): A list of options for the metadata field, if applicable.
+                                            Defaults to an empty list.
+            required (bool, optional): Whether the metadata field is required. Defaults to False.
+            position (int, optional): The position of the metadata field in a form. Defaults to -1.
+            group_id (int, optional): The group ID to which the metadata field belongs. Defaults to 0.
+            allow_multi_values (bool, optional): Whether multiple values are allowed for the metadata field.
+                                                Defaults to False.
+            unit (str, optional): The unit preselected of measurement for the metadata field, if applicable.
+                                    Defaults to None.
+            units (List[str], optional): A list of possible units of measurement for the metadata field.
+                                        Defaults to an empty list.
+    """
     name: str
     field_type: str
     value: Union[str, int, float]
@@ -31,9 +51,26 @@ class MetadataForms:
     @classmethod
     def generate_form(cls, metadata):
         """
-        Iteration generation forms
+        Iteratively generates forms based on metadata.
+
+        This method uses the provided metadata to generate form fields within a Streamlit session.
+        It ensures that session state variables for form data, required fields, and extra fields are initialized.
+        It sorts the extra fields based on their position and iteratively creates and renders each form field.
+
+        Args:
+            metadata (dict): A dictionary containing metadata for the form fields. It should include an 'extra_fields' key,
+                             which contains the details of each form field such as type, position, group_id, and other attributes.
+
+        Example:
+            metadata = {
+                'extra_fields': {
+                    'field1': {'type': 'text', 'value': 'default1', 'position': 1, 'required': True},
+                    'field2': {'type': 'number', 'value': 0, 'position': 2, 'required': False}
+                }
+            }
+            MyClass.generate_form(metadata)
         """
-        # var
+        # Initialize session state variables
         if 'form_data' not in st.session_state:
             st.session_state.form_data = {}
         if 'required_form' not in st.session_state:
@@ -67,9 +104,11 @@ class MetadataForms:
             st.session_state.form_data[field_name] = field_.value
 
     def _render_text_field(self, label: str):
+        """Text field rendering"""
         self.value = st.text_input(label, value=self.value, help=self.description)
 
     def _render_select_field(self, label: str):
+        """Select field rendering"""
         if self.allow_multi_values:
             self.value = st.multiselect(label, self.options, default=self.value, help=self.description)
         else:
@@ -78,6 +117,7 @@ class MetadataForms:
                                       help=self.description)
 
     def _render_date_field(self, label: str):
+        """Date field rendering"""
         try:
             date_exp = parse(str(self.value))
             self.value = st.date_input(label, value=date_exp, help=self.description)
@@ -85,19 +125,24 @@ class MetadataForms:
             self.value = st.date_input(label, value=date.today(), help=self.description)
 
     def _render_datetime_local_field(self, label: str):
+        """DateTime field rendering"""
         self.value = st.date_input(label, value=date.today(), help=self.description)
 
     def _render_checkbox_field(self, label: str):
+        """Checkbox field rendering"""
         self.value = st.checkbox(label, value=self.value, help=self.description)
 
     def _render_email_field(self, label: str):
+        """Email field rendering"""
         self.value = st.text_input(label, value=self.value, help=self.description, on_change=validate_email,
                                    args=(self.value,))
 
     def _render_time_field(self, label: str):
+        """Time field rendering"""
         self.value = st.time_input(label, value=self.value, help=self.description)
 
     def _render_number_field(self, label: str):
+        """Number field rendering. In container"""
         col1, col2 = st.columns([8, 2])
         with col1:
             try:
@@ -109,8 +154,10 @@ class MetadataForms:
             self.value = st.selectbox("Unit", self.units, index=self.units.index(self.unit))
 
     def _render_url_field(self, label: str):
+        """URL field rendering"""
         self.value = st.text_input(label, value=self.value, help=self.description, on_change=validate_url,
                                    args=(self.value,))
 
     def _render_radio_field(self, label: str):
+        """Radio render field"""
         self.value = st.radio(label, value=self.value, help=self.description)
