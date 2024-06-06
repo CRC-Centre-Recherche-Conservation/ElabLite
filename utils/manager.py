@@ -91,7 +91,11 @@ def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, group
 
     Returns:
         Dict[str, Dict[str, bytes]]: A dictionary with the new filenames and titles,
-        containing the uploaded files data as specified by the metadata.
+        containing the uploaded files data as specified by the metadata. The structure of the returned
+        dictionary depends on the `grouped` parameter:
+            - If `grouped` is True, returns a dictionary with a single key 'data' containing all files.
+            - If `grouped` is False, returns a dictionary where each key is a 'new_title' and each value
+              is another dictionary containing the files associated with that title.
 
     Example:
         uploaded_files = {
@@ -104,15 +108,34 @@ def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, group
             'new_title': ['title1', 'title2']
         })
         new_dict = files_management(uploaded_files, df_mtda, grouped=False)
+        # Example output:
+        # {
+        #     'title1': {'new_file1.txt': b'filedata1'},
+        #     'title2': {'new_file2.txt': b'filedata2'}
+        # }
     """
     new_dict = {}
+    # Keep Filename
+    if 'new_Filename' not in df_mtda.columns:
+        if grouped:
+            new_dict['data'] = uploaded_files
+            return new_dict
+        else:
+            for idx, row in df_mtda.iterrows():
+                if row['new_title'] not in new_dict:
+                    new_dict[row['new_title']] = {}
+                new_dict[row['new_title']][row['Filename']] = uploaded_files[row['Filename']]
+    # New Filename
     if grouped:
+        new_dict['data'] = {}
         for key, new_filename in zip(df_mtda['Filename'], df_mtda['new_Filename']):
             if key in uploaded_files:
-                new_dict['data'] = {new_filename: uploaded_files[key]}
+                new_dict['data'][new_filename] = uploaded_files[key]
     else:
         for idx, row in df_mtda.iterrows():
-            new_dict[row['new_title']] = {row['new_Filename']: uploaded_files[row['Filename']]}
+            if row['new_title'] not in new_dict:
+                new_dict[row['new_title']] = {}
+            new_dict[row['new_title']][row['new_Filename']] = uploaded_files[row['Filename']]
     return new_dict
 
 
