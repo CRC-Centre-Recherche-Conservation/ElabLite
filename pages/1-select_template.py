@@ -11,6 +11,7 @@ option = st.sidebar.radio("Options", ["Upload Template", "Select existing templa
 st.sidebar.divider()
 templates_dir = manage_temp_dir()
 
+### OPTIONS ###
 if option == "Upload Template":
     uploaded_file = st.file_uploader("Upload a file", type=["json", "csv", "eln"], accept_multiple_files=False)
     if uploaded_file is not None:
