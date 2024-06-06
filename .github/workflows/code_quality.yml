@@ -29,6 +29,7 @@ jobs:
       run: |
         mkdir -p badges
         pylint_score=$(pylint app.py ./models/ pages/ utils/ --output-format=text | grep -oP 'Your code has been rated at \K([0-9.]+)')
+        echo $pylint_score
         anybadge --value=$pylint_score --file=badges/quality.svg --label=Pylint --color=#76b947 --overwrite
     - name: Commit Changes
       run: |
