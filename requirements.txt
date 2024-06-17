@@ -4,3 +4,4 @@ validators>=0.28.1
 streamlit-tags>=1.2.8
 st-star-rating>=0.0.6
 PySide6>=6.7.1
+toml==0.10.2
