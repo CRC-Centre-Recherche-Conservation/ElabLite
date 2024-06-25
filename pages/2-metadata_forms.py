@@ -21,9 +21,9 @@ def step_metadata_base():
         st.session_state["metadata_base"] = None
     st.header("Experience presentation")
     with st.container(border=True):
-        title = st.text_input("Title", help="Title of the experience")
-        date = st.date_input("Date", value=datetime.now())
-        author = st.text_input("Author")
+        title = st.text_input("Title *", help="Title of the experience")
+        date = st.date_input("Date *", value=datetime.now())
+        author = st.text_input("Author *")
         commentary = st.text_area("Commentary")
         tags = st_tags(label="tags", maxtags=8)
         rating = st_star_rating(label="Rate you experience", maxValue=5, defaultValue=0)

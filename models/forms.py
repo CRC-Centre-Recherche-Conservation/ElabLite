@@ -105,14 +105,14 @@ class MetadataForms:
 
     def _render_text_field(self, label: str):
         """Text field rendering"""
-        self.value = st.text_input(label, value=self.value, help=self.description)
+        self.value = st.text_input(label + " *" if self.required else label, value=self.value, help=self.description)
 
     def _render_select_field(self, label: str):
         """Select field rendering"""
         if self.allow_multi_values:
-            self.value = st.multiselect(label, self.options, default=self.value, help=self.description)
+            self.value = st.multiselect(label + " *" if self.required else label, self.options, default=self.value, help=self.description)
         else:
-            self.value = st.selectbox(label, self.options,
+            self.value = st.selectbox(label + " *" if self.required else label, self.options,
                                       index=self.options.index(self.value) if self.value in self.options else 0,
                                       help=self.description)
 
@@ -120,44 +120,59 @@ class MetadataForms:
         """Date field rendering"""
         try:
             date_exp = parse(str(self.value))
-            self.value = st.date_input(label, value=date_exp, help=self.description)
+            self.value = st.date_input(label + " *" if self.required else label, value=date_exp, help=self.description)
         except ParserError:
-            self.value = st.date_input(label, value=date.today(), help=self.description)
+            self.value = st.date_input(label + " *" if self.required else label,
+                                       value=date.today(),
+                                       help=self.description)
 
     def _render_datetime_local_field(self, label: str):
         """DateTime field rendering"""
-        self.value = st.date_input(label, value=date.today(), help=self.description)
+        self.value = st.date_input(label + " *" if self.required else label, value=date.today(), help=self.description)
 
     def _render_checkbox_field(self, label: str):
         """Checkbox field rendering"""
-        self.value = st.checkbox(label, value=self.value, help=self.description)
+        self.value = st.checkbox(label + " *" if self.required else label, value=self.value, help=self.description)
 
     def _render_email_field(self, label: str):
         """Email field rendering"""
-        self.value = st.text_input(label, value=self.value, help=self.description, on_change=validate_email,
+        self.value = st.text_input(label + " *" if self.required else label,
+                                   value=self.value,
+                                   help=self.description,
+                                   on_change=validate_email,
                                    args=(self.value,))
 
     def _render_time_field(self, label: str):
         """Time field rendering"""
-        self.value = st.time_input(label, value=self.value, help=self.description)
+        self.value = st.time_input(label + " *" if self.required else label, value=self.value, help=self.description)
 
     def _render_number_field(self, label: str):
         """Number field rendering. In container"""
         col1, col2 = st.columns([8, 2])
         with col1:
             try:
-                self.value = st.number_input(label, value=float(self.value), help=self.description, step=None,
+                self.value = st.number_input(label + " *" if self.required else label,
+                                             value=float(self.value),
+                                             help=self.description,
+                                             step=None,
                                              format='%g')
             except Exception:
-                self.value = st.number_input(label, value=float(0), help=self.description, step=None, format='%g')
+                self.value = st.number_input(label + " *" if self.required else label,
+                                             value=float(0),
+                                             help=self.description,
+                                             step=None,
+                                             format='%g')
         with col2:
             self.value = st.selectbox("Unit", self.units, index=self.units.index(self.unit))
 
     def _render_url_field(self, label: str):
         """URL field rendering"""
-        self.value = st.text_input(label, value=self.value, help=self.description, on_change=validate_url,
+        self.value = st.text_input(label + " *" if self.required else label,
+                                   value=self.value,
+                                   help=self.description,
+                                   on_change=validate_url,
                                    args=(self.value,))
 
     def _render_radio_field(self, label: str):
         """Radio render field"""
-        self.value = st.radio(label, value=self.value, help=self.description)
+        self.value = st.radio(label + " *" if self.required else label, value=self.value, help=self.description)
