@@ -24,6 +24,11 @@ def manage_temp_dir() -> str:
         templates.pop(0)
     return templates_dir
 
+@st.cache_data
+def convert_df(df):
+    """cache dataframe"""
+    return df.to_csv().encode("utf-8")
+
 
 def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
     """

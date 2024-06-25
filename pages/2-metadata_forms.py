@@ -8,7 +8,7 @@ from streamlit_star_rating import st_star_rating
 from streamlit_tags import st_tags
 
 from models.forms import MetadataForms
-from utils.manager import generate_csv, zip_experience, files_management
+from utils.manager import generate_csv, zip_experience, files_management, convert_df
 from utils.menu import menu
 from utils.parser import TemplatesReader
 
@@ -143,11 +143,6 @@ def generate_newtitle(row: SeriesType, title: str) -> str:
         return f"{title} -- {row['IdentifierAnalysis']}_{row['Object/Sample']}"
     else:
         return f"{title} -- {row.idx}"
-
-@st.cache_data
-def convert_df(df):
-    """cache dataframe"""
-    return df.to_csv().encode("utf-8")
 
 
 def step_metadata_download():
