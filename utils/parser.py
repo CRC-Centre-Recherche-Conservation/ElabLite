@@ -149,7 +149,7 @@ class ElabLiteTemplatesReader:
 
     def __init__(self, file_path: str):
         """
-        Initializes the ElabLiteTemplatesReader object. MIME/TYPE : application/ld+json
+        Initializes the ElabLiteTemplatesReader object. MIME/TYPE : application/json
         :param file_path: str, Path to the ElabLite template file.
         """
         self.file_path = file_path
