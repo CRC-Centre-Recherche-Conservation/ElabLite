@@ -28,6 +28,8 @@ class TemplatesReader:
             reader = CSVTemplatesReader(self.file_path)
         elif file_format == 'eln':
             reader = ELNTemplatesReader(self.file_path)
+        elif file_format == 'elablite':
+            reader = ElabLiteTemplatesReader(self.file_path)
         else:
             raise ValueError("Unsupported file format")
         return reader
@@ -144,6 +146,7 @@ class ELNTemplatesReader:
         :return:
         """
         st.warning('ELN format not yet available')
+
 
 class ElabLiteTemplatesReader:
 
