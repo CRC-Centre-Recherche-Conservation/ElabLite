@@ -177,9 +177,12 @@ def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]
         zip_file.write(csv_filename, arcname='experiences.csv')
         zip_file.writestr('logs_process.csv', logs_process)
         for folder_name, files in uploaded_files.items():
+            file_names = []
             for file_name, file_data in files.items():
                 file_path = os.path.join(folder_name, file_name)
                 zip_file.writestr(file_path, file_data)
+                file_names.append(file_path)
+            zip_file.writestr(os.path.join(folder_name, 'DATAFILE.txt'), "\n".join(file_names))
     zip_buffer.seek(0)
     os.unlink(csv_filename)
     return zip_buffer
