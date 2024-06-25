@@ -50,6 +50,8 @@ class TemplatesReader:
             return 'csv'
         elif self.file_path.endswith('.eln'):
             return 'eln'
+        elif self.file_path.endswith('.elablite'):
+            return 'elablite'
         else:
             raise ValueError("Unknown file format")
 
@@ -115,7 +117,7 @@ class ELNTemplatesReader:
     def __init__(self, file_path: str):
         """
         Initializes the ELNTemplatesReader object.
-        :param file_path: str, Path to the CSV template file.
+        :param file_path: str, Path to the ELN template file.
         """
         self.file_path = file_path
         self.template = self.parse()
@@ -134,11 +136,35 @@ class ELNTemplatesReader:
                 st.info(metadataContent)
         except Exception as e:
             st.error(f"An error occurred: {e}")
+        st.warning('ELN format not yet available')
 
     def read_metadata(self) -> Dict:
         """
         Reads the metadata from the ELN file.
         :return:
         """
-        # ELN does not support metadata, returning an empty dictionary
-        return {}
+        st.warning('ELN format not yet available')
+
+class ElabLiteTemplatesReader:
+
+    def __init__(self, file_path: str):
+        """
+        Initializes the ElabLiteTemplatesReader object. MIME/TYPE : application/ld+json
+        :param file_path: str, Path to the ElabLite template file.
+        """
+        self.file_path = file_path
+        self.template = self.parse()
+
+    def parse(self):
+        """
+        Parses the ElabLite file, extracts, and displays metadata.
+        :return:
+        """
+        st.warning('ElabLite format not yet available')
+
+    def read_metadata(self) -> Dict:
+        """
+        Reads the metadata from the ElabLite file.
+        :return:
+        """
+        st.warning('ElabLite format not yet available')
