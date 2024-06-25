@@ -1,5 +1,6 @@
 import csv
 import os
+import pickle
 import streamlit as st
 import zipfile
 from io import BytesIO
@@ -28,10 +29,35 @@ def manage_temp_dir(child: str = None) -> str:
         templates.pop(0)
     return templates_dir
 
+
 @st.cache_data
 def convert_df(df):
     """cache dataframe"""
     return df.to_csv().encode("utf-8")
+
+@st.cache_data
+def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dict) -> bytes:
+    """
+    Create a serialized binary representation of metadata dictionary. Content .elablite
+
+    Args:
+            metadata_base (Dict): A dictionary containing base metadata with keys 'date', 'title', 'commentary', 'rating',
+                            and 'tags'. Related to Page 2 - Step 1 base metadata.
+            form_data (Dict): A dictionary containing form of metadata experience.
+                                Related to Page 2 - Step 2 form metadata.
+            template_metadata (Dict): Dict of metadata template
+
+    Returns:
+        bytes: Serialized binary data representing the metadata dictionary.
+    """
+    metadata_dict = {
+        '@context': 'http://example.org/elablite',
+        'metadata_base': st.session_state['metadata_base'],
+        'form_data': st.session_state['form_data'],
+        'template_metadata': st.session_state['template_metadata']
+    }
+
+    return pickle.dumps(metadata_dict)
 
 
 def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
@@ -87,7 +113,8 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
     return csv_filename
 
 
-def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, grouped: bool) -> Dict[str, Dict[str, bytes]]:
+def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, grouped: bool) -> Dict[
+    str, Dict[str, bytes]]:
     """
     Manages the renaming and grouping of uploaded files based on metadata provided in a DataFrame.
 

@@ -1,6 +1,4 @@
 import os
-import pandas as pd
-from pandas import Series as SeriesType
 import streamlit as st
 import time
 from datetime import datetime
@@ -8,7 +6,7 @@ from streamlit_star_rating import st_star_rating
 from streamlit_tags import st_tags
 
 from models.forms import MetadataForms
-from utils.manager import generate_csv, zip_experience, files_management, convert_df
+from utils.manager import create_elablite
 from utils.menu import menu
 from utils.parser import TemplatesReader
 
@@ -67,7 +65,22 @@ def step_metadata_forms():
 
 def step_metadata_download():
     """Step 3 page - Metadata download to elablite format"""
-    pass
+    filename = st.text_input("Filename", help='Enter the filename of your metadat preset. Ex: experience name')
+
+    if not filename.strip():
+        st.session_state["submit_enabled"] = True
+    else:
+        st.session_state["submit_enabled"] = False
+
+    st.download_button(
+        label="Download elablite",
+        data=create_elablite(metadata_base=st.session_state["metadata_base"],
+                             form_data=st.session_state["form_data"],
+                             template_metadata=st.session_state["template_metadata"]),
+        file_name=f"{filename}.elablite",
+        mime="application/octet-stream",
+        disabled=st.session_state["submit_enabled"]
+    )
 
 
 ### INTERN PAGE MANAGEMENT ###
