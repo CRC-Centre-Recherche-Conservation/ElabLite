@@ -110,7 +110,9 @@ class MetadataForms:
     def _render_select_field(self, label: str):
         """Select field rendering"""
         if self.allow_multi_values:
-            self.value = st.multiselect(label + " *" if self.required else label, self.options, default=self.value, help=self.description)
+            self.value = st.multiselect(label + " *" if self.required else label, self.options,
+                                        default=self.value,
+                                        help=self.description)
         else:
             self.value = st.selectbox(label + " *" if self.required else label, self.options,
                                       index=self.options.index(self.value) if self.value in self.options else 0,
