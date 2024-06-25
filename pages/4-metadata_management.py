@@ -23,22 +23,22 @@ def step_metadata_base():
     with st.container(border=True):
         title = st.text_input("Title *", help="Title of the experience",
                               value=st.session_state["metadata_base"]["title"]
-                              if "metadata_base" in st.session_state else None)
+                              if st.session_state['metadata_base'] is not None else None)
         date = st.date_input("Date *",
                              value=st.session_state["metadata_base"]["date"]
-                             if "metadata_base" in st.session_state else datetime.now())
+                             if st.session_state['metadata_base'] is not None else datetime.now())
         author = st.text_input("Author *",
                                value=st.session_state["metadata_base"]["author"]
-                               if "metadata_base" in st.session_state else None)
+                               if st.session_state['metadata_base'] is not None else None)
         commentary = st.text_area("Commentary",
                                   value=st.session_state["metadata_base"]["commentary"]
-                                  if "metadata_base" in st.session_state else None)
+                                  if st.session_state['metadata_base'] is not None else None)
         tags = st_tags(label="tags", maxtags=8,
                        value=st.session_state["metadata_base"]["tags"]
-                       if "metadata_base" in st.session_state else None)
+                       if st.session_state['metadata_base'] is not None else None)
         rating = st_star_rating(label="Rate you experience", maxValue=5,
                                 defaultValue=st.session_state["metadata_base"]["rating"]
-                                if "metadata_base" in st.session_state else 0)
+                                if st.session_state['metadata_base'] is not None else 0)
         submit_enabled = all((title, date, author))
         st.session_state["submit_enabled"] = submit_enabled
         st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary,
