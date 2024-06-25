@@ -140,7 +140,7 @@ def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, group
         return new_dict
 
 
-def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]]) -> BytesIO:
+def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]], logs_process: bytes) -> BytesIO:
     """
     Creates a zip archive containing a CSV file and additional uploaded files.
 
@@ -148,6 +148,8 @@ def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]
         csv_filename (str): The path to the CSV file to be included in the zip archive.
         uploaded_files (Dict): A dictionary containing the files to be added to the zip archive.
             The dictionary should be in the format {folder_name: {file_name: file_data}}.
+        logs_process (bytes): Edited dataframe cached to retain all modified information before transformation
+            and zipping.
 
     Returns:
         BytesIO: A BytesIO object containing the zip archive.
@@ -163,11 +165,12 @@ def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]
                 'doc2.txt': b'filedata4'
             }
         }
-        zip_buffer = zip_experience('experiences.csv', uploaded_files)
+        zip_buffer = zip_experience('experiences.csv', uploaded_files, logs_process)
     """
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(csv_filename, arcname='experiences.csv')
+        zip_file.writestr('logs_process.csv', logs_process)
         for folder_name, files in uploaded_files.items():
             for file_name, file_data in files.items():
                 file_path = os.path.join(folder_name, file_name)

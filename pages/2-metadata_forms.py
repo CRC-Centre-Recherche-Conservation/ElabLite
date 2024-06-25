@@ -144,6 +144,11 @@ def generate_newtitle(row: SeriesType, title: str) -> str:
     else:
         return f"{title} -- {row.idx}"
 
+@st.cache_data
+def convert_df(df):
+    """cache dataframe"""
+    return df.to_csv().encode("utf-8")
+
 
 def step_metadata_download():
     """Step 4 page - Generate new filenameDownload metadata"""
@@ -190,7 +195,7 @@ def step_metadata_download():
                                                    grouped=st.session_state["grouped_exp"])
                 time.sleep(1)
                 st.write("Zipping...")
-                zip_buffer = zip_experience(csv_, uploaded_files_)
+                zip_buffer = zip_experience(csv_, uploaded_files_, logs_process=convert_df(df))
                 del uploaded_files_, csv_
                 time.sleep(2)
                 status.update(label="Process complete!", state="complete", expanded=False)
