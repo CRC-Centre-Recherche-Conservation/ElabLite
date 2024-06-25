@@ -116,27 +116,28 @@ def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, group
     """
     new_dict = {}
     # Keep Filename
-    if 'new_Filename' not in df_mtda.columns:
+    if 'new_Filename' not in df_mtda.columns.tolist():
         if grouped:
             new_dict['data'] = uploaded_files
-            return new_dict
         else:
             for idx, row in df_mtda.iterrows():
                 if row['new_title'] not in new_dict:
                     new_dict[row['new_title']] = {}
                 new_dict[row['new_title']][row['Filename']] = uploaded_files[row['Filename']]
+        return new_dict
     # New Filename
-    if grouped:
-        new_dict['data'] = {}
-        for key, new_filename in zip(df_mtda['Filename'], df_mtda['new_Filename']):
-            if key in uploaded_files:
-                new_dict['data'][new_filename] = uploaded_files[key]
     else:
-        for idx, row in df_mtda.iterrows():
-            if row['new_title'] not in new_dict:
-                new_dict[row['new_title']] = {}
-            new_dict[row['new_title']][row['new_Filename']] = uploaded_files[row['Filename']]
-    return new_dict
+        if grouped:
+            new_dict['data'] = {}
+            for key, new_filename in zip(df_mtda['Filename'], df_mtda['new_Filename']):
+                if key in uploaded_files:
+                    new_dict['data'][new_filename] = uploaded_files[key]
+        else:
+            for idx, row in df_mtda.iterrows():
+                if row['new_title'] not in new_dict:
+                    new_dict[row['new_title']] = {}
+                new_dict[row['new_title']][row['new_Filename']] = uploaded_files[row['Filename']]
+        return new_dict
 
 
 def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]]) -> BytesIO:
