@@ -28,6 +28,7 @@ if option == "Upload Template":
         st.switch_page("pages/2-metadata_forms.py")
 elif option == "Select existing template":
     templates = os.listdir(templates_dir)
+    templates.remove('presets')
     selected_template = st.selectbox("Select a recent template", templates, index=None, placeholder="Choosing ...")
     if st.button('Validate'):
         try:
