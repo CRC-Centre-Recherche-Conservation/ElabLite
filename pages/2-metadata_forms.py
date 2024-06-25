@@ -17,16 +17,28 @@ from utils.parser import TemplatesReader
 
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
+    st.header("Experience presentation")
     if "metadata_base" not in st.session_state:
         st.session_state["metadata_base"] = None
-    st.header("Experience presentation")
     with st.container(border=True):
-        title = st.text_input("Title *", help="Title of the experience")
-        date = st.date_input("Date *", value=datetime.now())
-        author = st.text_input("Author *")
-        commentary = st.text_area("Commentary")
-        tags = st_tags(label="tags", maxtags=8)
-        rating = st_star_rating(label="Rate you experience", maxValue=5, defaultValue=0)
+        title = st.text_input("Title *", help="Title of the experience",
+                              value=st.session_state["metadata_base"]["title"]
+                              if "metadata_base" in st.session_state else None)
+        date = st.date_input("Date *",
+                             value=st.session_state["metadata_base"]["date"]
+                             if "metadata_base" in st.session_state else datetime.now())
+        author = st.text_input("Author *",
+                               value=st.session_state["metadata_base"]["author"]
+                               if "metadata_base" in st.session_state else None)
+        commentary = st.text_area("Commentary",
+                                  value=st.session_state["metadata_base"]["commentary"]
+                                  if "metadata_base" in st.session_state else None)
+        tags = st_tags(label="tags", maxtags=8,
+                       value=st.session_state["metadata_base"]["tags"]
+                       if "metadata_base" in st.session_state else None)
+        rating = st_star_rating(label="Rate you experience", maxValue=5,
+                                defaultValue=st.session_state["metadata_base"]["rating"]
+                                if "metadata_base" in st.session_state else 0)
         submit_enabled = all((title, date, author))
         st.session_state["submit_enabled"] = submit_enabled
         st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary,
@@ -50,6 +62,14 @@ def step_metadata_forms():
     except Exception as e:
         st.error(f"Error: {e}")
 
+
+### METADATA SAVING ###
+
+def step_metadata_download():
+    """Step 3 page - Metadata download to elablite format"""
+    pass
+
+
 ### INTERN PAGE MANAGEMENT ###
 
 def display_forms():
@@ -63,6 +83,9 @@ def display_forms():
         step_metadata_base()
     elif current_step == "step_metadata_forms":
         step_metadata_forms()
+    elif current_step == "step_metadata_download":
+        step_metadata_download()
+
 
 def next_step():
     """
@@ -70,6 +93,8 @@ def next_step():
     """
     if st.session_state["step_metadata"] == "step_metadata_base":
         st.session_state["step_metadata"] = "step_metadata_forms"
+    elif st.session_state["step_metadata"] == "step_metadata_forms":
+        st.session_state["step_metadata"] = "step_metadata_download"
 
 
 def previous_step():
@@ -78,6 +103,8 @@ def previous_step():
     """
     if st.session_state["step_metadata"] == "step_metadata_forms":
         st.session_state["step_metadata"] = "step_metadata_base"
+    elif st.session_state["step_metadata"] == "step_metadata_download":
+        st.session_state["step_metadata"] = "step_metadata_forms"
 
 
 ### PAGE ###
