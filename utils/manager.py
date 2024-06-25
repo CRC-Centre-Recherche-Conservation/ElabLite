@@ -8,13 +8,17 @@ from tempfile import NamedTemporaryFile, gettempdir
 from typing import Dict
 
 
-def manage_temp_dir() -> str:
+def manage_temp_dir(child: str = None) -> str:
     """
     Function to manage tmp dir templates/ and get the 10 files most recent and remove the rest
+    :param child: str, optional child directory in tmp dir
     :return: str, path tmp/templates/
     """
     temp_dir = gettempdir()
-    templates_dir = os.path.join(temp_dir, "templates")
+    if child is None:
+        templates_dir = os.path.join(temp_dir, "templates")
+    else:
+        templates_dir = os.path.join(temp_dir, "templates", child)
     if not os.path.exists(templates_dir):
         os.makedirs(templates_dir)
     # keep only the first 10 templates recent
