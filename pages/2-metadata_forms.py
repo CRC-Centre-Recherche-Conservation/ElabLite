@@ -161,12 +161,15 @@ def step_metadata_download():
     col1, col2 = st.columns([4, 7])
     with col1:
         if st.button("Validation filename"):
-            df['new_Filename'] = df.apply(lambda x: generate_filename(x, selected_columns), axis=1)
-            st.toast("Success!", icon='🎉')
-            with col2:
-                alert = st.caption(f"Example: {df['new_Filename'].iloc[0]}")
-            time.sleep(2)
-            alert.empty()
+            try:
+                df['new_Filename'] = df.apply(lambda x: generate_filename(x, selected_columns), axis=1)
+                st.toast("Success!", icon='🎉')
+                with col2:
+                    alert = st.caption(f"Example: {df['new_Filename'].iloc[0]}")
+                    time.sleep(2)
+                    alert.empty()
+            except Exception as err:
+                st.toast("Failed", icon=':fearful:')
 
     with st.container():
         st.subheader("Download ...")
