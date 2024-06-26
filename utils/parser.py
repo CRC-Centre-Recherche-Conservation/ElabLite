@@ -1,5 +1,6 @@
-import json
 import csv
+import json
+import pickle
 import streamlit as st
 from typing import Dict, List
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -163,11 +164,19 @@ class ElabLiteTemplatesReader:
         Parses the ElabLite file, extracts, and displays metadata.
         :return:
         """
-        st.warning('ElabLite format not yet available')
+        try:
+            with open(self.file_path, 'rb') as file:
+                data = pickle.load(file)
+                if data['@context'] != 'http://example.org/elablite/v1.0/':
+                    raise IOError("The file is invalid or corrupted.")
+            return data
+        except Exception as e:
+            st.error(f"Error parsing ElabLite file: {e}")
+            raise IOError("The file is invalid or corrupted.") from e
 
     def read_metadata(self) -> Dict:
         """
         Reads the metadata from the ElabLite file.
         :return:
         """
-        st.warning('ElabLite format not yet available')
+        return self.template['template_metadata']
