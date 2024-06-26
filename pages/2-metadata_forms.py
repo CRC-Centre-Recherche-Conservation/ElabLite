@@ -13,6 +13,8 @@ from utils.parser import TemplatesReader
 
 ### BASIC ###
 
+reader = TemplatesReader(st.session_state["selected_template"])
+
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
     st.header("Experience presentation")
@@ -50,7 +52,6 @@ def step_metadata_forms():
     if "template_metadata" not in st.session_state:
         st.session_state["template_metadata"] = None
     st.header("Experience presentation")
-    reader = TemplatesReader(st.session_state["selected_template"])
     try:
         st.session_state['template_metadata'] = reader.read_metadata()
         with st.container():
@@ -59,6 +60,9 @@ def step_metadata_forms():
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
     except Exception as e:
         st.error(f"Error: {e}")
+    # Re init without modification MetadataForms.generate_form()
+    # To save the good template in .elablite
+    st.session_state['template_metadata'] = reader.read_metadata()
 
 
 ### METADATA SAVING ###
