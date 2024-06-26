@@ -13,7 +13,19 @@ from utils.menu import menu
 from utils.parser import TemplatesReader
 
 
+
+
 ### BASIC ###
+
+# INIT TEMPLATE READER #
+reader = TemplatesReader(st.session_state["selected_preset"])
+# Get preset
+metadata_base, form_data = reader.read_preset()
+if metadata_base is not None and form_data is not None:
+    st.session_state['metadata_base'] = metadata_base
+    st.session_state['form_data'] = form_data
+del form_data, metadata_base
+
 
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
@@ -52,7 +64,6 @@ def step_metadata_forms():
     if "template_metadata" not in st.session_state:
         st.session_state["template_metadata"] = None
     st.header("Experience presentation")
-    reader = TemplatesReader(st.session_state["selected_preset"])
     try:
         st.session_state['template_metadata'] = reader.read_metadata()
         with st.container():

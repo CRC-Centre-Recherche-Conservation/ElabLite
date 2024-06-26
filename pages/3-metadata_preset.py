@@ -22,6 +22,10 @@ if option == "Upload preset":
         with open(st.session_state["selected_preset"], "wb") as f:
             f.write(uploaded_file.getvalue())
         st.success("File uploaded successfully!")
+        # re init
+        st.session_state['metadata_base'] = None
+        st.session_state['template_metadata'] = None
+        st.session_state['form_data'] = None
         # var
         st.session_state["preset_metadata"] = "preset_metadata_base"
         st.session_state.form_data = {}
@@ -34,6 +38,10 @@ elif option == "Select existing preset":
                                      index=None, placeholder="Choosing ...")
     if st.button('Validate'):
         try:
+            # re init
+            st.session_state['metadata_base'] = None
+            st.session_state['template_metadata'] = None
+            st.session_state['form_data'] = None
             # var
             st.session_state["selected_preset"] = os.path.join(templates_dir, selected_template)
             st.session_state["preset_metadata"] = "preset_metadata_base"
