@@ -1,5 +1,6 @@
 import csv
 import os
+import pickle
 import streamlit as st
 import zipfile
 from io import BytesIO
@@ -8,13 +9,17 @@ from tempfile import NamedTemporaryFile, gettempdir
 from typing import Dict
 
 
-def manage_temp_dir() -> str:
+def manage_temp_dir(child: str = None) -> str:
     """
     Function to manage tmp dir templates/ and get the 10 files most recent and remove the rest
+    :param child: str, optional child directory in tmp dir
     :return: str, path tmp/templates/
     """
     temp_dir = gettempdir()
-    templates_dir = os.path.join(temp_dir, "templates")
+    if child is None:
+        templates_dir = os.path.join(temp_dir, "templates")
+    else:
+        templates_dir = os.path.join(temp_dir, "templates", child)
     if not os.path.exists(templates_dir):
         os.makedirs(templates_dir)
     # keep only the first 10 templates recent
@@ -23,6 +28,36 @@ def manage_temp_dir() -> str:
         os.remove(os.path.join(templates_dir, templates[0]))
         templates.pop(0)
     return templates_dir
+
+
+@st.cache_data
+def convert_df(df):
+    """cache dataframe"""
+    return df.to_csv().encode("utf-8")
+
+@st.cache_data
+def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dict) -> bytes:
+    """
+    Create a serialized binary representation of metadata dictionary. Content .elablite
+
+    Args:
+            metadata_base (Dict): A dictionary containing base metadata with keys 'date', 'title', 'commentary', 'rating',
+                            and 'tags'. Related to Page 2 - Step 1 base metadata.
+            form_data (Dict): A dictionary containing form of metadata experience.
+                                Related to Page 2 - Step 2 form metadata.
+            template_metadata (Dict): Dict of metadata template
+
+    Returns:
+        bytes: Serialized binary data representing the metadata dictionary.
+    """
+    metadata_dict = {
+        '@context': 'http://example.org/elablite/v1.0/',
+        'metadata_base': st.session_state['metadata_base'],
+        'form_data': st.session_state['form_data'],
+        'template_metadata': st.session_state['template_metadata']
+    }
+
+    return pickle.dumps(metadata_dict)
 
 
 def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
@@ -78,7 +113,8 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
     return csv_filename
 
 
-def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, grouped: bool) -> Dict[str, Dict[str, bytes]]:
+def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, grouped: bool) -> Dict[
+    str, Dict[str, bytes]]:
     """
     Manages the renaming and grouping of uploaded files based on metadata provided in a DataFrame.
 
@@ -116,30 +152,31 @@ def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, group
     """
     new_dict = {}
     # Keep Filename
-    if 'new_Filename' not in df_mtda.columns:
+    if 'new_Filename' not in df_mtda.columns.tolist():
         if grouped:
             new_dict['data'] = uploaded_files
-            return new_dict
         else:
             for idx, row in df_mtda.iterrows():
                 if row['new_title'] not in new_dict:
                     new_dict[row['new_title']] = {}
                 new_dict[row['new_title']][row['Filename']] = uploaded_files[row['Filename']]
+        return new_dict
     # New Filename
-    if grouped:
-        new_dict['data'] = {}
-        for key, new_filename in zip(df_mtda['Filename'], df_mtda['new_Filename']):
-            if key in uploaded_files:
-                new_dict['data'][new_filename] = uploaded_files[key]
     else:
-        for idx, row in df_mtda.iterrows():
-            if row['new_title'] not in new_dict:
-                new_dict[row['new_title']] = {}
-            new_dict[row['new_title']][row['new_Filename']] = uploaded_files[row['Filename']]
-    return new_dict
+        if grouped:
+            new_dict['data'] = {}
+            for key, new_filename in zip(df_mtda['Filename'], df_mtda['new_Filename']):
+                if key in uploaded_files:
+                    new_dict['data'][new_filename] = uploaded_files[key]
+        else:
+            for idx, row in df_mtda.iterrows():
+                if row['new_title'] not in new_dict:
+                    new_dict[row['new_title']] = {}
+                new_dict[row['new_title']][row['new_Filename']] = uploaded_files[row['Filename']]
+        return new_dict
 
 
-def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]]) -> BytesIO:
+def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]], logs_process: bytes) -> BytesIO:
     """
     Creates a zip archive containing a CSV file and additional uploaded files.
 
@@ -147,6 +184,8 @@ def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]
         csv_filename (str): The path to the CSV file to be included in the zip archive.
         uploaded_files (Dict): A dictionary containing the files to be added to the zip archive.
             The dictionary should be in the format {folder_name: {file_name: file_data}}.
+        logs_process (bytes): Edited dataframe cached to retain all modified information before transformation
+            and zipping.
 
     Returns:
         BytesIO: A BytesIO object containing the zip archive.
@@ -162,15 +201,19 @@ def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]
                 'doc2.txt': b'filedata4'
             }
         }
-        zip_buffer = zip_experience('experiences.csv', uploaded_files)
+        zip_buffer = zip_experience('experiences.csv', uploaded_files, logs_process)
     """
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(csv_filename, arcname='experiences.csv')
+        zip_file.writestr('logs_process.csv', logs_process)
         for folder_name, files in uploaded_files.items():
+            file_names = []
             for file_name, file_data in files.items():
                 file_path = os.path.join(folder_name, file_name)
                 zip_file.writestr(file_path, file_data)
+                file_names.append(file_path)
+            zip_file.writestr(os.path.join(folder_name, 'DATAFILE.txt'), "\n".join(file_names))
     zip_buffer.seek(0)
     os.unlink(csv_filename)
     return zip_buffer
