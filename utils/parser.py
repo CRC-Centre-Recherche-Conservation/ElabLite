@@ -58,6 +58,15 @@ class TemplatesReader:
         else:
             raise ValueError("Unknown file format")
 
+    def read_preset(self) -> tuple[Dict, Dict]:
+        """
+        Read preset save. ONLY ELABLITE
+        metadata_base : generic information (date, author, title, etc ...)
+        form_data : experience metadata
+        :return: tuple(Dict['metadata_base'], Dict['form_data'])
+        """
+        return self.file.read_preset()
+
 
 class JSONTemplatesReader:
 
@@ -82,6 +91,9 @@ class JSONTemplatesReader:
         :return: dict, Metadata extracted from the JSON content.
         """
         return json.loads(self.template['metadata'])
+
+    def read_preset(self):
+        return None, None
 
 
 class CSVTemplatesReader:
@@ -112,6 +124,9 @@ class CSVTemplatesReader:
         """
         # CSV does not support metadata, returning an empty dictionary
         return {}
+
+    def read_preset(self):
+        return None, None
 
 
 class ELNTemplatesReader:
@@ -148,6 +163,9 @@ class ELNTemplatesReader:
         """
         st.warning('ELN format not yet available')
 
+    def read_preset(self):
+        return None, None
+
 
 class ElabLiteTemplatesReader:
 
@@ -180,3 +198,12 @@ class ElabLiteTemplatesReader:
         :return:
         """
         return self.template['template_metadata']
+
+    def read_preset(self) -> tuple[Dict, Dict]:
+        """
+        Read preset save in Elablite file.
+        metadata_base : generic information (date, author, title, etc ...)
+        form_data : experience metadata
+        :return: tuple(Dict['metadata_base'], Dict['form_data'])
+        """
+        return self.template['metadata_base'], self.template['form_data']
