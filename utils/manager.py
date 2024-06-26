@@ -51,7 +51,7 @@ def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dic
         bytes: Serialized binary data representing the metadata dictionary.
     """
     metadata_dict = {
-        '@context': 'http://example.org/elablite',
+        '@context': 'http://example.org/elablite/v1.0',
         'metadata_base': st.session_state['metadata_base'],
         'form_data': st.session_state['form_data'],
         'template_metadata': st.session_state['template_metadata']
