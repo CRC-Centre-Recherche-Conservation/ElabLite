@@ -11,10 +11,10 @@ from utils.manager import create_elablite
 from utils.menu import menu
 from utils.parser import TemplatesReader
 
-
 ### BASIC ###
 
 reader = TemplatesReader(st.session_state["selected_template"])
+
 
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
@@ -32,9 +32,9 @@ def step_metadata_base():
 
         with col1:
             technical_code = st.selectbox("Select a technique *", index=None, options=technique_options,
-                                            format_func=lambda x: TECHNIQUES[x].english_name)
+                                          format_func=lambda x: TECHNIQUES[x].english_name)
         with col2:
-            with st.container(height=11, border=False): # css cheat button
+            with st.container(height=11, border=False):  # css cheat button
                 st.empty()
             with st.container():
                 add_button = st.button(":heavy_plus_sign:", help="Add a new technique")
