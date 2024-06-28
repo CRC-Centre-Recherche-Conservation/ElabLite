@@ -6,6 +6,7 @@ from streamlit_star_rating import st_star_rating
 from streamlit_tags import st_tags
 
 from models.forms import MetadataForms
+from models.technical import TechniqueOption, TECHNIQUES
 from utils.manager import create_elablite
 from utils.menu import menu
 from utils.parser import TemplatesReader
@@ -20,10 +21,26 @@ def step_metadata_base():
     st.header("Experience presentation")
     if "metadata_base" not in st.session_state:
         st.session_state["metadata_base"] = None
+
+    technique_options = list(TECHNIQUES.keys())
     with st.container(border=True):
         title = st.text_input("Title *", help="Title of the experience",
                               value=st.session_state["metadata_base"]["title"]
                               if st.session_state['metadata_base'] is not None else None)
+        # Technical code
+        col1, col2 = st.columns([12, 1])
+
+        with col1:
+            technical_code = st.selectbox("Select a technique *", index=None, options=technique_options,
+                                            format_func=lambda x: TECHNIQUES[x].english_name)
+        with col2:
+            with st.container(height=11, border=False): # css cheat button
+                st.empty()
+            with st.container():
+                add_button = st.button(":heavy_plus_sign:", help="Add a new technique")
+        if add_button:
+            TechniqueOption.open_add_technique_modal()
+
         date = st.date_input("Date *",
                              value=st.session_state["metadata_base"]["date"]
                              if st.session_state['metadata_base'] is not None else datetime.now())
@@ -36,13 +53,14 @@ def step_metadata_base():
         tags = st_tags(label="tags", maxtags=8,
                        value=st.session_state["metadata_base"]["tags"]
                        if st.session_state['metadata_base'] is not None else None)
+        st.divider()
         rating = st_star_rating(label="Rate you experience", maxValue=5,
                                 defaultValue=st.session_state["metadata_base"]["rating"]
                                 if st.session_state['metadata_base'] is not None else 0)
-        submit_enabled = all((title, date, author))
+        submit_enabled = all((title, date, author, technical_code))
         st.session_state["submit_enabled"] = submit_enabled
         st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary,
-                                             'tags': tags, 'rating': rating}
+                                             'tags': tags, 'rating': rating, 'technical_code': technical_code}
 
 
 ### METADATA INSTRUMENTAL ###
