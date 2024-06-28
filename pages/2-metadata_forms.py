@@ -33,6 +33,7 @@ def step_metadata_base():
         with col1:
             technical_code = st.selectbox("Select a technique *", index=None, options=technique_options,
                                           format_func=lambda x: TECHNIQUES[x].english_name)
+            technical = technique_options[technical_code]
         with col2:
             with st.container(height=11, border=False):  # css cheat button
                 st.empty()
@@ -60,7 +61,7 @@ def step_metadata_base():
         submit_enabled = all((title, date, author, technical_code))
         st.session_state["submit_enabled"] = submit_enabled
         st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary,
-                                             'tags': tags, 'rating': rating, 'technical_code': technical_code}
+                                             'tags': tags, 'rating': rating, 'technical': technical}
 
 
 ### METADATA INSTRUMENTAL ###
