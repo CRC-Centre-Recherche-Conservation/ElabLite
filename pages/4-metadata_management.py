@@ -163,7 +163,8 @@ def generate_filename(row: SeriesType, selected_columns: list) -> str:
 
     code = st.session_state['metadata_base']['technical'].code
     date = st.session_state['metadata_base']['date'].strftime('%Y%m%d')
-    return str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
+    new_filename = str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
+    return new_filename.replace("__", "_")
 
 
 def generate_newtitle(row: SeriesType, title: str) -> str:
