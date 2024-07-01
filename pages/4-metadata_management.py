@@ -114,7 +114,7 @@ def display_file_metadata(filenames: list):
 
     df['Filename'] = df.apply(find_filename, axis=1)
 
-    st.session_state["dataframe_metadata"] = st.data_editor(df)
+    st.session_state["dataframe_metadata_edited"] = st.data_editor(df)
 
 
 def step_metadata_files():
@@ -190,11 +190,13 @@ def step_metadata_download():
 
     st.header("Download experiences")
     st.subheader("Preparing ...")
-    df = st.session_state["dataframe_metadata"]
-    df['new_title'] = df.apply(lambda x: generate_newtitle(x, st.session_state['metadata_base']['title']), axis=1) # Generate alternative titles non-bundled
+    df = st.session_state["dataframe_metadata_edited"]
+    # Generate alternative titles non-bundled
+    df['new_title'] = df.apply(lambda x: generate_newtitle(x, st.session_state['metadata_base']['title']), axis=1)
 
     exclude_columns = ['Filename', 'new_title', 'new_Filename']
-    selected_columns = st.multiselect("Select columns to include in filename (in order)", [col for col in df.columns.tolist() if col not in exclude_columns])
+    selected_columns = st.multiselect("Select columns to include in filename (in order)",
+                                      [col for col in df.columns.tolist() if col not in exclude_columns])
 
     col1, col2 = st.columns([4, 7])
     with col1:
@@ -207,7 +209,8 @@ def step_metadata_download():
                     time.sleep(2)
                     alert.empty()
             except Exception as err:
-                st.toast("Failed", icon=':fearful:')
+                st.toast("Failed", icon='🚨')
+                st.info(err)
 
     with st.container():
         st.subheader("Download ...")
