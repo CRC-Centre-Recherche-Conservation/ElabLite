@@ -8,6 +8,7 @@ from streamlit_star_rating import st_star_rating
 from streamlit_tags import st_tags
 
 from models.forms import MetadataForms
+from models.technical import TechniqueOption, TECHNIQUES
 from utils.manager import generate_csv, zip_experience, files_management, convert_df
 from utils.menu import menu
 from utils.parser import TemplatesReader
@@ -22,6 +23,7 @@ reader = TemplatesReader(st.session_state["selected_preset"])
 # Get preset
 metadata_base, form_data = reader.read_preset()
 if metadata_base is not None and form_data is not None:
+    st.info('Je ne suis pas nonte')
     st.session_state['metadata_base'] = metadata_base
     st.session_state['form_data'] = form_data
 del form_data, metadata_base
@@ -30,31 +32,42 @@ del form_data, metadata_base
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
     st.header("Experience presentation")
-    if "metadata_base" not in st.session_state:
-        st.session_state["metadata_base"] = None
+    if "metadata_base" not in st.session_state or st.session_state['metadata_base'] is None:
+        st.session_state["metadata_base"] = {}
+
+    metadata = st.session_state["metadata_base"]
+
     with st.container(border=True):
-        title = st.text_input("Title *", help="Title of the experience",
-                              value=st.session_state["metadata_base"]["title"]
-                              if st.session_state['metadata_base'] is not None else None)
-        date = st.date_input("Date *",
-                             value=st.session_state["metadata_base"]["date"]
-                             if st.session_state['metadata_base'] is not None else datetime.now())
-        author = st.text_input("Author *",
-                               value=st.session_state["metadata_base"]["author"]
-                               if st.session_state['metadata_base'] is not None else None)
-        commentary = st.text_area("Commentary",
-                                  value=st.session_state["metadata_base"]["commentary"]
-                                  if st.session_state['metadata_base'] is not None else None)
-        tags = st_tags(label="tags", maxtags=8,
-                       value=st.session_state["metadata_base"]["tags"]
-                       if st.session_state['metadata_base'] is not None else None)
-        rating = st_star_rating(label="Rate you experience", maxValue=5,
-                                defaultValue=st.session_state["metadata_base"]["rating"]
-                                if st.session_state['metadata_base'] is not None else 0)
-        submit_enabled = all((title, date, author))
+        title = st.text_input("Title *", help="Title of the experience", value=metadata.get("title", ""))
+
+        # Technical box
+        col1, col2 = st.columns([12, 1])
+
+        with col1:
+            technical_code = st.selectbox("Select a technique *", options=TECHNIQUES.keys(),
+                                          format_func=lambda x: TECHNIQUES[x].english_name,
+                                          index=list(TECHNIQUES.keys()).index(metadata["technical"].code)
+                                          if metadata.get("technical") else None)
+            technical = TECHNIQUES.get(technical_code)
+        with col2:
+            with st.container(height=11, border=False):  # css cheat button
+                st.empty()
+            with st.container():
+                add_button = st.button(":heavy_plus_sign:", help="Add a new technique")
+        if add_button:
+            TechniqueOption.open_add_technique_modal()
+
+        date = st.date_input("Date *", value=metadata.get("date", datetime.now()))
+        author = st.text_input("Author *", value=metadata.get("author"))
+        commentary = st.text_area("Commentary", value=metadata.get("commentary"))
+        tags = st_tags(label="tags", maxtags=8, value=metadata.get("tags", []))
+        st.divider()
+        rating = st_star_rating(label="Rate you experience", maxValue=5, defaultValue=metadata.get("rating", 0))
+
+        submit_enabled = all((title, date, author, technical_code))
         st.session_state["submit_enabled"] = submit_enabled
         st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary,
-                                             'tags': tags, 'rating': rating}
+                                             'tags': tags, 'rating': rating, 'technical': technical}
 
 
 ### METADATA INSTRUMENTAL ###
@@ -93,11 +106,12 @@ def display_file_metadata(filenames: list):
     df = pd.DataFrame([{'Filename': filenames[0]} | form_data], columns=['Filename', *form_data.keys()])
     for filename in filenames[1:]:
         row_data = {'Filename': filename} | form_data
-        df = pd.concat([df, pd.DataFrame([row_data], columns=['Filename', *form_data.keys()])], ignore_index=True)
+        df = pd.concat([df, pd.DataFrame([row_data], columns=['Filename', *form_data.keys()])],
+                       ignore_index=True)
 
     df['IdentifierAnalysis'] = ""
     df['Object/Sample'] = ""
-    #ordering
+    # ordering
     columns_order = ['Filename', 'IdentifierAnalysis', 'Object/Sample', *form_data.keys()]
     df = df[columns_order]
 
@@ -147,8 +161,9 @@ def generate_filename(row: SeriesType, selected_columns: list) -> str:
 
     _, extension = os.path.splitext(row['Filename'])
 
+    code = st.session_state['metadata_base']['technical'].code
     date = st.session_state['metadata_base']['date'].strftime('%Y%m%d')
-    return str(date) + "_" + "_".join(filename_parts) + extension
+    return str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
 
 
 def generate_newtitle(row: SeriesType, title: str) -> str:
