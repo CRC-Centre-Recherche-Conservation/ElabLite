@@ -22,7 +22,9 @@ if option == "Upload Template":
         st.success("File uploaded successfully!")
         # var
         st.session_state["step_metadata"] = "step_metadata_base"
-        st.session_state.form_data = {}
+        st.session_state['metadata_base'] = {}
+        st.session_state['template_metadata'] = None
+        st.session_state['form_data'] = {}
         # redirect
         sleep(1.5)
         st.switch_page("pages/2-metadata_forms.py")
@@ -35,7 +37,9 @@ elif option == "Select existing template":
             # var
             st.session_state["selected_template"] = os.path.join(templates_dir, selected_template)
             st.session_state["step_metadata"] = "step_metadata_base"
-            st.session_state.form_data = {}
+            st.session_state['metadata_base'] = {}
+            st.session_state['template_metadata'] = None
+            st.session_state['form_data'] = {}
             # redirect
             st.switch_page("pages/2-metadata_forms.py")
         except TypeError:

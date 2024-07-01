@@ -20,8 +20,6 @@ reader = TemplatesReader(st.session_state["selected_template"])
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
     st.header("Experience presentation")
-    if "metadata_base" not in st.session_state:
-        st.session_state["metadata_base"] = {}
 
     metadata = st.session_state["metadata_base"]
 
