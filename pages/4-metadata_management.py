@@ -23,7 +23,6 @@ reader = TemplatesReader(st.session_state["selected_preset"])
 # Get preset
 metadata_base, form_data = reader.read_preset()
 if metadata_base is not None and form_data is not None:
-    st.info('Je ne suis pas nonte')
     st.session_state['metadata_base'] = metadata_base
     st.session_state['form_data'] = form_data
 del form_data, metadata_base
@@ -79,9 +78,9 @@ def step_metadata_forms():
     st.header("Experience presentation")
     try:
         st.session_state['template_metadata'] = reader.read_metadata()
-        with st.container():
+        with st.expander("General metadata preset"):
             st.session_state.required_form = []
-            MetadataForms.generate_form(st.session_state['template_metadata'])
+            MetadataForms.generate_form(st.session_state['template_metadata'], disabled=True)
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
     except Exception as e:
         st.error(f"Error: {e}")
