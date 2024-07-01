@@ -25,7 +25,11 @@ metadata_base, form_data = reader.read_preset()
 if metadata_base is not None and form_data is not None:
     st.session_state['metadata_base'] = metadata_base
     st.session_state['form_data'] = form_data
-del form_data, metadata_base
+
+dataframe_metadata = reader.read_dataframe()
+if dataframe_metadata is not None:
+    st.session_state['dataframe_metadata'] = dataframe_metadata
+del form_data, metadata_base, dataframe_metadata
 
 
 def step_metadata_base():
@@ -98,21 +102,17 @@ def display_file_metadata(filenames: list):
         Returns:
         None
     """
-    if "dataframe_metadata" not in st.session_state:
-        st.session_state["dataframe_metadata"] = None
 
-    form_data = st.session_state.form_data
-    df = pd.DataFrame([{'Filename': filenames[0]} | form_data], columns=['Filename', *form_data.keys()])
-    for filename in filenames[1:]:
-        row_data = {'Filename': filename} | form_data
-        df = pd.concat([df, pd.DataFrame([row_data], columns=['Filename', *form_data.keys()])],
-                       ignore_index=True)
+    df = st.session_state['dataframe_metadata']
 
-    df['IdentifierAnalysis'] = ""
-    df['Object/Sample'] = ""
-    # ordering
-    columns_order = ['Filename', 'IdentifierAnalysis', 'Object/Sample', *form_data.keys()]
-    df = df[columns_order]
+    def find_filename(row):
+        """check and get filename corresponding to row"""
+        for filename in filenames:
+            if row['IdentifierAnalysis'] in filename and row['Object/Sample'] in filename:
+                return filename
+        return ''
+
+    df['Filename'] = df.apply(find_filename, axis=1)
 
     st.session_state["dataframe_metadata"] = st.data_editor(df)
 
