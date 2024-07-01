@@ -8,6 +8,7 @@ from streamlit_star_rating import st_star_rating
 from streamlit_tags import st_tags
 
 from models.forms import MetadataForms
+from models.technical import TechniqueOption, TECHNIQUES
 from utils.manager import generate_csv, zip_experience, files_management, convert_df
 from utils.menu import menu
 from utils.parser import TemplatesReader
@@ -24,37 +25,52 @@ metadata_base, form_data = reader.read_preset()
 if metadata_base is not None and form_data is not None:
     st.session_state['metadata_base'] = metadata_base
     st.session_state['form_data'] = form_data
-del form_data, metadata_base
+
+dataframe_metadata = reader.read_dataframe()
+if dataframe_metadata is not None:
+    st.session_state['dataframe_metadata'] = dataframe_metadata
+del form_data, metadata_base, dataframe_metadata
 
 
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
     st.header("Experience presentation")
-    if "metadata_base" not in st.session_state:
-        st.session_state["metadata_base"] = None
+    if "metadata_base" not in st.session_state or st.session_state['metadata_base'] is None:
+        st.session_state["metadata_base"] = {}
+
+    metadata = st.session_state["metadata_base"]
+
     with st.container(border=True):
-        title = st.text_input("Title *", help="Title of the experience",
-                              value=st.session_state["metadata_base"]["title"]
-                              if st.session_state['metadata_base'] is not None else None)
-        date = st.date_input("Date *",
-                             value=st.session_state["metadata_base"]["date"]
-                             if st.session_state['metadata_base'] is not None else datetime.now())
-        author = st.text_input("Author *",
-                               value=st.session_state["metadata_base"]["author"]
-                               if st.session_state['metadata_base'] is not None else None)
-        commentary = st.text_area("Commentary",
-                                  value=st.session_state["metadata_base"]["commentary"]
-                                  if st.session_state['metadata_base'] is not None else None)
-        tags = st_tags(label="tags", maxtags=8,
-                       value=st.session_state["metadata_base"]["tags"]
-                       if st.session_state['metadata_base'] is not None else None)
-        rating = st_star_rating(label="Rate you experience", maxValue=5,
-                                defaultValue=st.session_state["metadata_base"]["rating"]
-                                if st.session_state['metadata_base'] is not None else 0)
-        submit_enabled = all((title, date, author))
+        title = st.text_input("Title *", help="Title of the experience", value=metadata.get("title", ""))
+
+        # Technical box
+        col1, col2 = st.columns([12, 1])
+
+        with col1:
+            technical_code = st.selectbox("Select a technique *", options=TECHNIQUES.keys(),
+                                          format_func=lambda x: TECHNIQUES[x].english_name,
+                                          index=list(TECHNIQUES.keys()).index(metadata["technical"].code)
+                                          if metadata.get("technical") else None)
+            technical = TECHNIQUES.get(technical_code)
+        with col2:
+            with st.container(height=11, border=False):  # css cheat button
+                st.empty()
+            with st.container():
+                add_button = st.button(":heavy_plus_sign:", help="Add a new technique")
+        if add_button:
+            TechniqueOption.open_add_technique_modal()
+
+        date = st.date_input("Date *", value=metadata.get("date", datetime.now()))
+        author = st.text_input("Author *", value=metadata.get("author"))
+        commentary = st.text_area("Commentary", value=metadata.get("commentary"))
+        tags = st_tags(label="tags", maxtags=8, value=metadata.get("tags", []))
+        st.divider()
+        rating = st_star_rating(label="Rate you experience", maxValue=5, defaultValue=metadata.get("rating", 0))
+
+        submit_enabled = all((title, date, author, technical_code))
         st.session_state["submit_enabled"] = submit_enabled
         st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary,
-                                             'tags': tags, 'rating': rating}
+                                             'tags': tags, 'rating': rating, 'technical': technical}
 
 
 ### METADATA INSTRUMENTAL ###
@@ -66,9 +82,9 @@ def step_metadata_forms():
     st.header("Experience presentation")
     try:
         st.session_state['template_metadata'] = reader.read_metadata()
-        with st.container():
+        with st.expander("General metadata preset"):
             st.session_state.required_form = []
-            MetadataForms.generate_form(st.session_state['template_metadata'])
+            MetadataForms.generate_form(st.session_state['template_metadata'], disabled=True)
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
     except Exception as e:
         st.error(f"Error: {e}")
@@ -86,22 +102,19 @@ def display_file_metadata(filenames: list):
         Returns:
         None
     """
-    if "dataframe_metadata" not in st.session_state:
-        st.session_state["dataframe_metadata"] = None
 
-    form_data = st.session_state.form_data
-    df = pd.DataFrame([{'Filename': filenames[0]} | form_data], columns=['Filename', *form_data.keys()])
-    for filename in filenames[1:]:
-        row_data = {'Filename': filename} | form_data
-        df = pd.concat([df, pd.DataFrame([row_data], columns=['Filename', *form_data.keys()])], ignore_index=True)
+    df = st.session_state['dataframe_metadata']
 
-    df['IdentifierAnalysis'] = ""
-    df['Object/Sample'] = ""
-    #ordering
-    columns_order = ['Filename', 'IdentifierAnalysis', 'Object/Sample', *form_data.keys()]
-    df = df[columns_order]
+    def find_filename(row):
+        """check and get filename corresponding to row"""
+        for filename in filenames:
+            if row['IdentifierAnalysis'] in filename and row['Object/Sample'] in filename:
+                return filename
+        return ''
 
-    st.session_state["dataframe_metadata"] = st.data_editor(df)
+    df['Filename'] = df.apply(find_filename, axis=1)
+
+    st.session_state["dataframe_metadata_edited"] = st.data_editor(df)
 
 
 def step_metadata_files():
@@ -147,8 +160,10 @@ def generate_filename(row: SeriesType, selected_columns: list) -> str:
 
     _, extension = os.path.splitext(row['Filename'])
 
+    code = st.session_state['metadata_base']['technical'].code
     date = st.session_state['metadata_base']['date'].strftime('%Y%m%d')
-    return str(date) + "_" + "_".join(filename_parts) + extension
+    new_filename = str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
+    return new_filename.replace("__", "_")
 
 
 def generate_newtitle(row: SeriesType, title: str) -> str:
@@ -175,11 +190,13 @@ def step_metadata_download():
 
     st.header("Download experiences")
     st.subheader("Preparing ...")
-    df = st.session_state["dataframe_metadata"]
-    df['new_title'] = df.apply(lambda x: generate_newtitle(x, st.session_state['metadata_base']['title']), axis=1) # Generate alternative titles non-bundled
+    df = st.session_state["dataframe_metadata_edited"]
+    # Generate alternative titles non-bundled
+    df['new_title'] = df.apply(lambda x: generate_newtitle(x, st.session_state['metadata_base']['title']), axis=1)
 
     exclude_columns = ['Filename', 'new_title', 'new_Filename']
-    selected_columns = st.multiselect("Select columns to include in filename (in order)", [col for col in df.columns.tolist() if col not in exclude_columns])
+    selected_columns = st.multiselect("Select columns to include in filename (in order)",
+                                      [col for col in df.columns.tolist() if col not in exclude_columns])
 
     col1, col2 = st.columns([4, 7])
     with col1:
@@ -192,7 +209,8 @@ def step_metadata_download():
                     time.sleep(2)
                     alert.empty()
             except Exception as err:
-                st.toast("Failed", icon=':fearful:')
+                st.toast("Failed", icon='🚨')
+                st.info(err)
 
     with st.container():
         st.subheader("Download ...")

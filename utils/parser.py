@@ -1,5 +1,6 @@
 import csv
 import json
+import pandas as pd
 import pickle
 import streamlit as st
 from typing import Dict, List
@@ -67,6 +68,10 @@ class TemplatesReader:
         """
         return self.file.read_preset()
 
+    def read_dataframe(self) -> pd.DataFrame:
+        """Read dataframe. ONLY ELABLITE"""
+        return self.file.read_dataframe()
+
 
 class JSONTemplatesReader:
 
@@ -94,6 +99,9 @@ class JSONTemplatesReader:
 
     def read_preset(self):
         return None, None
+
+    def read_dataframe(self):
+        return None
 
 
 class CSVTemplatesReader:
@@ -127,6 +135,9 @@ class CSVTemplatesReader:
 
     def read_preset(self):
         return None, None
+
+    def read_dataframe(self):
+        return None
 
 
 class ELNTemplatesReader:
@@ -165,6 +176,9 @@ class ELNTemplatesReader:
 
     def read_preset(self):
         return None, None
+
+    def read_dataframe(self):
+        return None
 
 
 class ElabLiteTemplatesReader:
@@ -207,3 +221,10 @@ class ElabLiteTemplatesReader:
         :return: tuple(Dict['metadata_base'], Dict['form_data'])
         """
         return self.template['metadata_base'], self.template['form_data']
+
+    def read_dataframe(self) -> pd.DataFrame:
+        """
+        Reads the dataframe from the ElabLite file.
+        :return: Dataframe
+        """
+        return self.template['dataframe_metadata']

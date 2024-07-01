@@ -14,7 +14,7 @@ templates_dir = manage_temp_dir(child='presets')
 ### OPTIONS ###
 if option == "Upload preset":
     uploaded_file = st.file_uploader("Upload a file",
-                                     type=["json", "csv", "eln", "elablite"],
+                                     type=["elablite"],
                                      accept_multiple_files=False)
     if uploaded_file is not None:
         st.session_state["selected_preset"] = os.path.join(templates_dir, uploaded_file.name)
