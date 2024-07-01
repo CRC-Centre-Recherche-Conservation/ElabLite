@@ -34,7 +34,7 @@ def step_metadata_base():
             technical_code = st.selectbox("Select a technique *", options=TECHNIQUES.keys(),
                                           format_func=lambda x: TECHNIQUES[x].english_name,
                                           index=list(TECHNIQUES.keys()).index(metadata["technical"].code)
-                                                if metadata.get("technical") else 0)
+                                                if metadata.get("technical") else None)
             technical = TECHNIQUES.get(technical_code)
         with col2:
             with st.container(height=11, border=False):  # css cheat button
