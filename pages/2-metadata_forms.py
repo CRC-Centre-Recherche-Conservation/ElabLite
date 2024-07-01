@@ -22,7 +22,10 @@ def step_metadata_base():
     if "metadata_base" not in st.session_state:
         st.session_state["metadata_base"] = None
 
-    technique_options = list(TECHNIQUES.keys())
+    technique_default = None
+    if st.session_state["metadata_base"] is not None:
+        technique_default = st.session_state["metadata_base"]["technical"]
+
     with st.container(border=True):
         title = st.text_input("Title *", help="Title of the experience",
                               value=st.session_state["metadata_base"]["title"]
@@ -31,9 +34,14 @@ def step_metadata_base():
         col1, col2 = st.columns([12, 1])
 
         with col1:
-            technical_code = st.selectbox("Select a technique *", index=None, options=technique_options,
+            technical_code = st.selectbox("Select a technique *",
+                                          index=list(TECHNIQUES.keys()).index(technique_default.code)
+                                                if technique_default is not None else None,
+                                          options=TECHNIQUES.keys(),
                                           format_func=lambda x: TECHNIQUES[x].english_name)
-            technical = technique_options[technical_code]
+            if technical_code is not None:
+                technical = TECHNIQUES[technical_code]
+                st.info(technical)
         with col2:
             with st.container(height=11, border=False):  # css cheat button
                 st.empty()
