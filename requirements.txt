@@ -3,3 +3,4 @@ python-dateutil
 validators>=0.28.1
 streamlit-tags>=1.2.8
 st-star-rating>=0.0.6
+dill>=0.3.8

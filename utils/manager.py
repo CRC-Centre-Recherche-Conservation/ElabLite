@@ -1,6 +1,7 @@
 import csv
+import dill as pickle
 import os
-import pickle
+import pandas as pd
 import streamlit as st
 import zipfile
 from io import BytesIO
@@ -36,7 +37,7 @@ def convert_df(df):
     return df.to_csv().encode("utf-8")
 
 @st.cache_data
-def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dict) -> bytes:
+def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dict, dataframe_metadata: pd.DataFrame) -> bytes:
     """
     Create a serialized binary representation of metadata dictionary. Content .elablite
 
@@ -46,15 +47,17 @@ def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dic
             form_data (Dict): A dictionary containing form of metadata experience.
                                 Related to Page 2 - Step 2 form metadata.
             template_metadata (Dict): Dict of metadata template
+            dataframe_metadata (DataFrame): DataFrame of metadata edited by analysis
 
     Returns:
         bytes: Serialized binary data representing the metadata dictionary.
     """
     metadata_dict = {
         '@context': 'http://example.org/elablite/v1.0/',
-        'metadata_base': st.session_state['metadata_base'],
-        'form_data': st.session_state['form_data'],
-        'template_metadata': st.session_state['template_metadata']
+        'metadata_base': metadata_base,
+        'form_data': form_data,
+        'template_metadata': template_metadata,
+        'dataframe_metadata': dataframe_metadata
     }
 
     return pickle.dumps(metadata_dict)

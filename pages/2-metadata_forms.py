@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 import streamlit as st
 import time
 from datetime import datetime
@@ -76,6 +77,53 @@ def step_metadata_forms():
     # To save the good template in .elablite
     st.session_state['template_metadata'] = reader.read_metadata()
 
+### EDITING DATAFRAME FILE ###
+
+def new_row_dataframe() -> pd.DataFrame:
+    """
+    Adds a new row to the DataFrame stored in the Streamlit session state under the key "dataframe_metadata".
+
+    """
+    edited_df = st.session_state["dataframe_metadata"]
+
+    new_row = edited_df.iloc[-1].copy()
+    new_row['IdentifierAnalysis'] = ""
+    new_row['Object/Sample'] = ""
+    edited_df.loc[len(edited_df)] = new_row
+
+    return edited_df
+
+
+def step_metadata_files():
+    """Step 3 page - Manage metadata with datafiles files"""
+    st.session_state["submit_enabled"] = True
+
+    st.header("Files metadata editor")
+    with st.expander("Help", expanded=False):
+        st.markdown("""
+    This spreadsheet is quickly made up of metadata based on your analyses. Two columns are essential to the analysis: 
+- `IdentifierAnalysis` : corresponds to the identifier of your analysis, both internal and external (e.g. *XRF0001*).
+- `Object/Sample` : corresponds to the identifier of your study object or sample (e.g. *AvranchesMs59f01v*, *MNHN-X314z8j*, etc. ....). Your text must be made without spaces, either by separating with a capital letter or with a hyphen (-) to show continuity. The underscore is used to separate parameters in the file name.
+- `LocalisationAnalysis` : description area to help locate and differentiate the analysis. If you later wish to keep this parameter within the file name, it must not contain spaces or be too descriptive (e.g. *RedTopEnlighment*).
+        
+In this spreadsheet you can add cells (with the `+` button), delete cells or enlarge cells. If you wish to add a new cell and apply metadata. Ideally, select the first row and drag. Alternatively, you can copy/paste the line.
+    """)
+
+    if "dataframe_metadata" not in st.session_state:
+        st.session_state["dataframe_metadata"] = None
+
+    form_data = st.session_state.form_data
+    df = pd.DataFrame([form_data], columns=[*form_data.keys()])
+
+    df['IdentifierAnalysis'] = ""
+    df['Object/Sample'] = ""
+    df['LocalisationAnalysis'] = ""
+    # ordering
+    columns_order = ['IdentifierAnalysis', 'Object/Sample', 'LocalisationAnalysis', *form_data.keys()]
+    df = df[columns_order]
+    # Display datafrale
+    st.session_state["dataframe_metadata"] = st.data_editor(df, num_rows="dynamic", hide_index=True)
+
 
 ### METADATA SAVING ###
 
@@ -92,7 +140,8 @@ def step_metadata_download():
         label="Download elablite",
         data=create_elablite(metadata_base=st.session_state["metadata_base"],
                              form_data=st.session_state["form_data"],
-                             template_metadata=st.session_state["template_metadata"]),
+                             template_metadata=st.session_state["template_metadata"],
+                             dataframe_metadata=st.session_state["dataframe_metadata"]),
         file_name=f"{filename}.elablite",
         mime="application/octet-stream",
         disabled=st.session_state["submit_enabled"]
@@ -112,6 +161,8 @@ def display_forms():
         step_metadata_base()
     elif current_step == "step_metadata_forms":
         step_metadata_forms()
+    elif current_step == "step_metadata_files":
+        step_metadata_files()
     elif current_step == "step_metadata_download":
         step_metadata_download()
 
@@ -123,6 +174,8 @@ def next_step():
     if st.session_state["step_metadata"] == "step_metadata_base":
         st.session_state["step_metadata"] = "step_metadata_forms"
     elif st.session_state["step_metadata"] == "step_metadata_forms":
+        st.session_state["step_metadata"] = "step_metadata_files"
+    elif st.session_state["step_metadata"] == "step_metadata_files":
         st.session_state["step_metadata"] = "step_metadata_download"
 
 
@@ -133,6 +186,8 @@ def previous_step():
     if st.session_state["step_metadata"] == "step_metadata_forms":
         st.session_state["step_metadata"] = "step_metadata_base"
     elif st.session_state["step_metadata"] == "step_metadata_download":
+        st.session_state["step_metadata"] = "step_metadata_files"
+    elif st.session_state["step_metadata"] == "step_metadata_files":
         st.session_state["step_metadata"] = "step_metadata_forms"
 
 
