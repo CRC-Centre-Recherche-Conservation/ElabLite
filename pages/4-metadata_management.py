@@ -34,7 +34,7 @@ del form_data, metadata_base, dataframe_metadata
 
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
-    st.header("Experience presentation")
+    st.header("Experiment Base")
     if "metadata_base" not in st.session_state or st.session_state['metadata_base'] is None:
         st.session_state["metadata_base"] = {}
 
@@ -79,7 +79,7 @@ def step_metadata_forms():
     """Step 2 page - Metadata forms instrumental"""
     if "template_metadata" not in st.session_state:
         st.session_state["template_metadata"] = None
-    st.header("Experience presentation")
+    st.header("Experiment Metadata Preset")
     try:
         st.session_state['template_metadata'] = reader.read_metadata()
         with st.expander("General metadata preset"):
@@ -126,7 +126,7 @@ def step_metadata_files():
 
     st.session_state["submit_enabled"] = True
 
-    st.header("Files metadata editor")
+    st.header("Files Mapping Editor")
     uploaded_files = st.file_uploader("Upload Files", accept_multiple_files=True, key='upload_files')
 
     if uploaded_files:
@@ -190,7 +190,7 @@ def step_metadata_download():
     if "grouped_exp" not in st.session_state:
         st.session_state["grouped_exp"] = False
 
-    st.header("Download experiences")
+    st.header("Download Experiments")
     st.subheader("Preparing ...")
     df = st.session_state["dataframe_metadata_edited"]
     # Generate alternative titles non-bundled
