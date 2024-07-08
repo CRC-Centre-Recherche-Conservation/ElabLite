@@ -127,6 +127,18 @@ def step_metadata_files():
     st.session_state["submit_enabled"] = True
 
     st.header("Files Mapping Editor")
+    with st.expander("Help", expanded=False):
+        st.markdown("""
+        In order to make the link between metadata and experimental data, you need to import the files in order to
+         perform this mapping.
+
+You can add files more than once, as the table will update automatically.  If a file is not correctly identified, 
+you can add it manually in the `'Filename'` column.
+
+Please note: If you change pages and wish to come back and modify the mapping or other operations, the files are no 
+longer stored in memory. You'll have to redo this work
+        """)
+
     uploaded_files = st.file_uploader("Upload Files", accept_multiple_files=True, key='upload_files')
 
     if uploaded_files:
@@ -136,6 +148,7 @@ def step_metadata_files():
 
     with st.spinner("Processing dataframe..."):
         while not uploaded_files:
+            st.markdown("You need to upload files")
             time.sleep(1)
         file_names = [file.name for file in uploaded_files]
     if file_names is not None:
