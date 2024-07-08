@@ -65,7 +65,7 @@ def step_metadata_base():
         commentary = st.text_area("Commentary", value=metadata.get("commentary"))
         tags = st_tags(label="tags", maxtags=8, value=metadata.get("tags", []))
         st.divider()
-        rating = st_star_rating(label="Rate you experience", maxValue=5, defaultValue=metadata.get("rating", 0))
+        rating = st_star_rating(label="Rate your experiment", maxValue=5, defaultValue=metadata.get("rating", 0))
 
         submit_enabled = all((title, date, author, technical_code))
         st.session_state["submit_enabled"] = submit_enabled
