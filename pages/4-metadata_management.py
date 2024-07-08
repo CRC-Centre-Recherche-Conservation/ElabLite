@@ -82,7 +82,7 @@ def step_metadata_forms():
     st.header("Experiment Metadata Preset")
     try:
         st.session_state['template_metadata'] = reader.read_metadata()
-        with st.expander("General metadata preset"):
+        with st.expander("General metadata preset", expanded=True):
             st.session_state.required_form = []
             MetadataForms.generate_form(st.session_state['template_metadata'], disabled=True)
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
