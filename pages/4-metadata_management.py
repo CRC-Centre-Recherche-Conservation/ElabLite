@@ -189,6 +189,8 @@ def step_metadata_download():
     """Step 4 page - Generate new filenameDownload metadata"""
     if "grouped_exp" not in st.session_state:
         st.session_state["grouped_exp"] = False
+    if "filename_validated" not in st.session_state:
+        st.session_state["filename_validated"] = False
 
     st.header("Download Experiments")
     st.subheader("Preparing ...")
@@ -200,26 +202,30 @@ def step_metadata_download():
     selected_columns = st.multiselect("Select columns to include in filename (in order)",
                                       [col for col in df.columns.tolist() if col not in exclude_columns])
 
-    col1, col2 = st.columns([4, 7])
-    with col1:
+    col1, col2, col3 = st.columns([1, 4, 7])
+    with col2:
         if st.button("Validation filename"):
             try:
                 df['new_Filename'] = df.apply(lambda x: generate_filename(x, selected_columns), axis=1)
                 st.toast("Success!", icon='🎉')
-                with col2:
+                st.session_state["filename_validated"] = True
+                with col3:
                     alert = st.caption(f"Example: {df['new_Filename'].iloc[0]}")
                     time.sleep(2)
                     alert.empty()
             except Exception as err:
                 st.toast("Failed", icon='🚨')
                 st.info(err)
+    with col1:
+        st.checkbox("Filename validated", value=st.session_state["filename_validated"], disabled=True)
+
 
     with st.container():
         st.subheader("Download ...")
 
         st.markdown("""
         By checking the toggle, you can group all the files within a single experiment in the electronic laboratory 
-        notebook. On the other hand, if files and metadata are to be considered separately,
+        notebook. On the other hand, if files and its metadata are to be considered separately,
          the toggle should be unchecked.
         """)
         st.session_state["grouped_exp"] = st.toggle('Grouping analysis ?',
