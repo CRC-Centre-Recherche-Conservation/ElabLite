@@ -15,6 +15,17 @@ from utils.parser import TemplatesReader
 ### BASIC ###
 
 reader = TemplatesReader(st.session_state["selected_template"])
+# Get preset
+metadata_base, form_data = reader.read_preset()
+if metadata_base is not None and form_data is not None:
+    st.session_state['metadata_base'] = metadata_base
+    st.session_state['form_data'] = form_data
+
+dataframe_metadata = reader.read_dataframe()
+if dataframe_metadata is not None:
+    st.session_state['dataframe_metadata'] = dataframe_metadata
+del form_data, metadata_base, dataframe_metadata
+
 
 
 def step_metadata_base():
@@ -115,15 +126,19 @@ In this spreadsheet you can add cells (with the `+` button), delete cells or enl
         st.session_state["dataframe_metadata"] = None
 
     form_data = st.session_state.form_data
-    df = pd.DataFrame([form_data], columns=[*form_data.keys()])
 
-    df['IdentifierAnalysis'] = ""
-    df['Object/Sample'] = ""
-    df['LocalisationAnalysis'] = ""
-    # ordering
-    columns_order = ['IdentifierAnalysis', 'Object/Sample', 'LocalisationAnalysis', *form_data.keys()]
-    df = df[columns_order]
-    # Display datafrale
+    if st.session_state['dataframe_metadata'] is not None:
+        df = st.session_state['dataframe_metadata']
+    else:
+        df = pd.DataFrame([form_data], columns=[*form_data.keys()])
+        # New column
+        df['IdentifierAnalysis'] = ""
+        df['Object/Sample'] = ""
+        df['LocalisationAnalysis'] = ""
+        # ordering
+        columns_order = ['IdentifierAnalysis', 'Object/Sample', 'LocalisationAnalysis', *form_data.keys()]
+        df = df[columns_order]
+    # Display dataframe
     st.session_state["dataframe_metadata"] = st.data_editor(df, num_rows="dynamic", hide_index=True)
 
 
