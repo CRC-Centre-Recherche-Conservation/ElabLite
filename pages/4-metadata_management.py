@@ -217,6 +217,11 @@ def step_metadata_download():
     with st.container():
         st.subheader("Download ...")
 
+        st.markdown("""
+        By checking the toggle, you can group all the files within a single experiment in the electronic laboratory 
+        notebook. On the other hand, if files and metadata are to be considered separately,
+         the toggle should be unchecked.
+        """)
         st.session_state["grouped_exp"] = st.toggle('Grouping analysis ?',
                                                     help='Activate to group all analyses in one experience')
 
