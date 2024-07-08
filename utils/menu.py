@@ -13,7 +13,7 @@ def menu():
         st.sidebar.page_link("app.py", label="Homepage", icon="🏠")
         st.sidebar.title("Metadata Experiment")
         st.sidebar.page_link("pages/1-select_template.py", label="New Experiment")
-        st.sidebar.page_link("pages/5-load_template.py", label="Load Experiment")
+        st.sidebar.page_link("pages/1-load_template.py", label="Load Experiment")
         if "selected_template" in st.session_state and st.session_state["selected_template"] is not None:
             st.sidebar.page_link("pages/2-metadata_forms.py", label="Current Experiment")
         st.sidebar.title("Files Experiment")
