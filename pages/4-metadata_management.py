@@ -215,7 +215,7 @@ def step_metadata_download():
     selected_columns = st.multiselect("Select columns to include in filename (in order)",
                                       [col for col in df.columns.tolist() if col not in exclude_columns])
 
-    col1, col2, col3 = st.columns([1, 4, 7])
+    col1, col2, col3 = st.columns([1, 7, 17])
     with col2:
         if st.button("Validation filename"):
             try:
@@ -230,7 +230,7 @@ def step_metadata_download():
                 st.toast("Failed", icon='🚨')
                 st.info(err)
     with col1:
-        st.checkbox("Filename validated", value=st.session_state["filename_validated"], disabled=True)
+        st.checkbox("", value=st.session_state["filename_validated"], disabled=True)
 
 
     with st.container():
