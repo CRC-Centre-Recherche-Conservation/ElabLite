@@ -113,6 +113,8 @@ def display_file_metadata(filenames: list):
         return ''
 
     df['Filename'] = df.apply(find_filename, axis=1)
+    # Filename first
+    df = df[['Filename'] + [col for col in df.columns if col != 'Filename']]
 
     st.session_state["dataframe_metadata_edited"] = st.data_editor(df)
 
