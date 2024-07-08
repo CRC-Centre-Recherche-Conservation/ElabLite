@@ -317,7 +317,7 @@ def previous_step():
 
 ### PAGE ###
 
-st.title("Metadata & Files Management")
+st.title("Metadata & Files Experiments")
 menu()
 
 # check templates
