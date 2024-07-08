@@ -10,6 +10,12 @@ menu()
 option = st.sidebar.radio("Options", ["Upload Template", "Select existing template"])
 st.sidebar.divider()
 templates_dir = manage_temp_dir()
+st.markdown("""
+This page allows you to use an authority form template from an electronic laboratory notebook to acquire metadata about 
+one or more experiences. Format: JSON, CSV, ELN
+- `Upload Template`: Import a new template
+- `Select Existing Template`: Use a template already loaded in memory (valid until next reboot).
+""")
 
 ### OPTIONS ###
 if option == "Upload Template":
