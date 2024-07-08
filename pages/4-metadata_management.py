@@ -230,7 +230,8 @@ def step_metadata_download():
                 st.toast("Failed", icon='🚨')
                 st.info(err)
     with col1:
-        st.checkbox("", value=st.session_state["filename_validated"], disabled=True)
+        st.checkbox("check_filename", value=st.session_state["filename_validated"],
+                    disabled=True, label_visibility='hidden')
 
 
     with st.container():
