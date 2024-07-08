@@ -19,12 +19,12 @@ reader = TemplatesReader(st.session_state["selected_template"])
 
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
-    st.header("Experience presentation")
+    st.header("Experiment Base")
 
     metadata = st.session_state["metadata_base"]
 
     with st.container(border=True):
-        title = st.text_input("Title *", help="Title of the experience", value=metadata.get("title"))
+        title = st.text_input("Title *", help="Title of the experiment", value=metadata.get("title"))
 
         # Technical box
         col1, col2 = st.columns([12, 1])
@@ -62,7 +62,7 @@ def step_metadata_forms():
     """Step 2 page - Metadata forms instrumental"""
     if "template_metadata" not in st.session_state:
         st.session_state["template_metadata"] = None
-    st.header("Experience presentation")
+    st.header("Experience Metadata")
     try:
         st.session_state['template_metadata'] = reader.read_metadata()
         with st.container():
@@ -96,15 +96,19 @@ def step_metadata_files():
     """Step 3 page - Manage metadata with datafiles files"""
     st.session_state["submit_enabled"] = True
 
-    st.header("Files metadata editor")
+    st.header("Files Metadata Editor")
     with st.expander("Help", expanded=False):
         st.markdown("""
     This spreadsheet is quickly made up of metadata based on your analyses. Two columns are essential to the analysis: 
 - `IdentifierAnalysis` : corresponds to the identifier of your analysis, both internal and external (e.g. *XRF0001*).
-- `Object/Sample` : corresponds to the identifier of your study object or sample (e.g. *AvranchesMs59f01v*, *MNHN-X314z8j*, etc. ....). Your text must be made without spaces, either by separating with a capital letter or with a hyphen (-) to show continuity. The underscore is used to separate parameters in the file name.
-- `LocalisationAnalysis` : description area to help locate and differentiate the analysis. If you later wish to keep this parameter within the file name, it must not contain spaces or be too descriptive (e.g. *RedTopEnlighment*).
+- `Object/Sample` : corresponds to the identifier of your study object or sample (e.g. *AvranchesMs59f01v*, 
+*MNHN-X314z8j*, etc. ....). Your text must be made without spaces, either by separating with a capital letter or with a 
+hyphen (-) to show continuity. The underscore is used to separate parameters in the file name.
+- `LocalisationAnalysis` : description area to help locate and differentiate the analysis. If you later wish to keep 
+this parameter within the file name, it must not contain spaces or be too descriptive (e.g. *RedTopEnlighment*).
         
-In this spreadsheet you can add cells (with the `+` button), delete cells or enlarge cells. If you wish to add a new cell and apply metadata. Ideally, select the first row and drag. Alternatively, you can copy/paste the line.
+In this spreadsheet you can add cells (with the `+` button), delete cells or enlarge cells. If you wish to add a new
+ cell and apply metadata. Ideally, select the first row and drag. Alternatively, you can copy/paste the line.
     """)
 
     if "dataframe_metadata" not in st.session_state:
