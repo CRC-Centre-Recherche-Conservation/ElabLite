@@ -145,15 +145,13 @@ In this spreadsheet you can add cells (with the `+` button), delete cells or enl
         # ordering
         columns_order = ['IdentifierAnalysis', 'Object/Sample', 'LocalisationAnalysis', *form_data.keys()]
         df = df[columns_order]
-    # Display dataframe
-    with st.form("dataframe_editor_form"):
-        # Display dataframe
-        edited_df = st.data_editor(df, num_rows="dynamic", hide_index=True)
 
-        # Add a save button
-        if st.form_submit_button("Save Changes"):
-            st.session_state["dataframe_metadata"] = edited_df
-            st.toast("Changes saved successfully!")
+    edited_df = st.data_editor(df, num_rows="dynamic", hide_index=True, key="data_editor")
+    has_changes = not st.session_state["dataframe_metadata"].equals(edited_df)
+    # Display dataframe
+    if st.button("Save", disabled=not has_changes):
+        st.session_state["dataframe_metadata"] = edited_df
+        st.toast("Changes saved successfully!", icon="✅")
 
 
 ### METADATA SAVING ###
