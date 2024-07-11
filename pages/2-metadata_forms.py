@@ -74,8 +74,9 @@ def step_metadata_forms():
     if "template_metadata" not in st.session_state:
         st.session_state["template_metadata"] = None
     st.header("Experience Metadata")
+    original_metadata = reader.read_metadata()
     try:
-        st.session_state['template_metadata'] = reader.read_metadata()
+        st.session_state['template_metadata'] = original_metadata
         with st.container():
             st.session_state.required_form = []
             MetadataForms.generate_form(st.session_state['template_metadata'])
@@ -84,7 +85,7 @@ def step_metadata_forms():
         st.error(f"Error: {e}")
     # Re init without modification MetadataForms.generate_form()
     # To save the good template in .elablite
-    st.session_state['template_metadata'] = reader.read_metadata()
+    st.session_state['template_metadata'] = original_metadata
 
 ### EDITING DATAFRAME FILE ###
 
