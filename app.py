@@ -23,6 +23,8 @@ def run():
         st.session_state["step_metadata"] = "step_metadata_base"
     if 'validation_error' not in st.session_state:
         st.session_state.validation_error = True
+    if 'selected_template' not in st.session_state:
+        st.session_state.selected_template = None
 
     # SIDEBAR
     menu()
