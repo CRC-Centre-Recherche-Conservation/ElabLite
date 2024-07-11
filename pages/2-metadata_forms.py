@@ -129,7 +129,7 @@ In this spreadsheet you can add cells (with the `+` button), delete cells or enl
     form_data = st.session_state.form_data
 
     if st.session_state['dataframe_metadata'] is not None:
-        df = st.session_state['dataframe_metadata']
+        df = st.session_state['dataframe_metadata'].copy()
     else:
         df = pd.DataFrame([form_data], columns=[*form_data.keys()])
         # New column
@@ -140,7 +140,14 @@ In this spreadsheet you can add cells (with the `+` button), delete cells or enl
         columns_order = ['IdentifierAnalysis', 'Object/Sample', 'LocalisationAnalysis', *form_data.keys()]
         df = df[columns_order]
     # Display dataframe
-    st.session_state["dataframe_metadata"] = st.data_editor(df, num_rows="dynamic", hide_index=True)
+    with st.form("dataframe_editor_form"):
+        # Display dataframe
+        edited_df = st.data_editor(df, num_rows="dynamic", hide_index=True)
+
+        # Add a save button
+        if st.form_submit_button("Save Changes"):
+            st.session_state["dataframe_metadata"] = edited_df
+            st.toast("Changes saved successfully!")
 
 
 ### METADATA SAVING ###
