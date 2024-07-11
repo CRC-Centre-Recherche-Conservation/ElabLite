@@ -13,14 +13,9 @@ def menu():
         [data-testid="stSidebar"] [data-testid="stExpander"] details {
         border: none !important;
         }
-        div[data-testid="stExpander"] details summary p {
+        [data-testid="stSidebar"] div[data-testid="stExpander"] details summary p {
         font-size: 2rem;
         font-weight: bold;
-        }
-        div[data-testid="stExpander"] details summary svg {
-        display: flex;
-        align-items: center;
-        justify-content: center;
         }
         </style>
         ''',
