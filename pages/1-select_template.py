@@ -30,6 +30,7 @@ if option == "Upload Template":
         st.session_state["step_metadata"] = "step_metadata_base"
         st.session_state['metadata_base'] = {}
         st.session_state['template_metadata'] = None
+        st.session_state["dataframe_metadata"] = None
         st.session_state['form_data'] = {}
         st.session_state['basic_executed'] = False
         # redirect
@@ -46,6 +47,7 @@ elif option == "Select existing template":
             st.session_state["step_metadata"] = "step_metadata_base"
             st.session_state['metadata_base'] = {}
             st.session_state['template_metadata'] = None
+            st.session_state["dataframe_metadata"] = None
             st.session_state['basic_executed'] = False
             st.session_state['form_data'] = {}
             # redirect
