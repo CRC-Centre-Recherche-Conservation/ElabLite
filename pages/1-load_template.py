@@ -25,8 +25,8 @@ if option == "Import save":
         # re init
         st.session_state['metadata_base'] = None
         st.session_state['template_metadata'] = None
-        st.session_state['form_data'] = None
         st.session_state["dataframe_metadata"] = None
+        st.session_state['basic_executed'] = False
         # var
         st.session_state["step_metadata"] = "step_metadata_base"
         st.session_state.form_data = {}
@@ -42,8 +42,8 @@ elif option == "Load existing save":
             # re init
             st.session_state['metadata_base'] = None
             st.session_state['template_metadata'] = None
-            st.session_state['form_data'] = None
             st.session_state["dataframe_metadata"] = None
+            st.session_state['basic_executed'] = False
             # var
             st.session_state["selected_template"] = os.path.join(templates_dir, selected_template)
             st.session_state["step_metadata"] = "step_metadata_base"

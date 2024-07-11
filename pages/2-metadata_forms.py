@@ -1,3 +1,4 @@
+import copy
 import os
 import pandas as pd
 import streamlit as st
@@ -15,16 +16,20 @@ from utils.parser import TemplatesReader
 ### BASIC ###
 
 reader = TemplatesReader(st.session_state["selected_template"])
-# Get preset
-metadata_base, form_data = reader.read_preset()
-if metadata_base is not None and form_data is not None:
-    st.session_state['metadata_base'] = metadata_base
-    st.session_state['form_data'] = form_data
+if not st.session_state['basic_executed']:
+    # Get preset
+    metadata_base, form_data = reader.read_preset()
+    if metadata_base is not None and form_data is not None:
+        st.session_state['metadata_base'] = metadata_base
+        st.session_state['form_data'] = form_data
 
-dataframe_metadata = reader.read_dataframe()
-if dataframe_metadata is not None:
-    st.session_state['dataframe_metadata'] = dataframe_metadata
-del form_data, metadata_base, dataframe_metadata
+    dataframe_metadata = reader.read_dataframe()
+    if dataframe_metadata is not None:
+        st.session_state['dataframe_metadata'] = dataframe_metadata
+    del form_data, metadata_base, dataframe_metadata
+
+    # Set the flag to True after execution
+    st.session_state['basic_executed'] = True
 
 
 
@@ -75,11 +80,12 @@ def step_metadata_forms():
         st.session_state["template_metadata"] = None
     st.header("Experience Metadata")
     original_metadata = reader.read_metadata()
+    working_metadata = copy.deepcopy(original_metadata)
     try:
         st.session_state['template_metadata'] = original_metadata
         with st.container():
             st.session_state.required_form = []
-            MetadataForms.generate_form(st.session_state['template_metadata'])
+            MetadataForms.generate_form(working_metadata)
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
     except Exception as e:
         st.error(f"Error: {e}")
@@ -155,7 +161,6 @@ In this spreadsheet you can add cells (with the `+` button), delete cells or enl
 def step_metadata_download():
     """Step 3 page - Metadata download to elablite format"""
     filename = st.text_input("Filename", help='Enter the filename of your metadat preset. Ex: experience name')
-
     if not filename.strip():
         st.session_state["submit_enabled"] = True
     else:
