@@ -32,7 +32,6 @@ if not st.session_state['basic_executed']:
     st.session_state['basic_executed'] = True
 
 
-
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
     st.header("Experiment Base")
@@ -49,7 +48,7 @@ def step_metadata_base():
             technical_code = st.selectbox("Select a technique *", options=TECHNIQUES.keys(),
                                           format_func=lambda x: TECHNIQUES[x].english_name,
                                           index=list(TECHNIQUES.keys()).index(metadata["technical"].code)
-                                                if metadata.get("technical") else None)
+                                          if metadata.get("technical") else None)
             technical = TECHNIQUES.get(technical_code)
         with col2:
             with st.container(height=11, border=False):  # css cheat button
@@ -93,21 +92,22 @@ def step_metadata_forms():
     # To save the good template in .elablite
     st.session_state['template_metadata'] = original_metadata
 
+
 ### EDITING DATAFRAME FILE ###
 
-def new_row_dataframe() -> pd.DataFrame:
+def add_row(edited_df: pd.DataFrame):
     """
-    Adds a new row to the DataFrame stored in the Streamlit session state under the key "dataframe_metadata".
+    Adds a new row to the DataFrame stored in the Streamlit session state under the key "edited_df".
 
     """
-    edited_df = st.session_state["dataframe_metadata"]
+    df = edited_df
+    form_data = st.session_state.form_data
 
-    new_row = edited_df.iloc[-1].copy()
-    new_row['IdentifierAnalysis'] = ""
-    new_row['Object/Sample'] = ""
-    edited_df.loc[len(edited_df)] = new_row
-
-    return edited_df
+    new_row = pd.DataFrame([form_data], columns=[*form_data.keys()])
+    new_row['IdentifierAnalysis'] = None
+    new_row['Object/Sample'] = None
+    new_row['LocalisationAnalysis'] = None
+    st.session_state.dataframe_metadata = pd.concat([df, new_row], ignore_index=True)
 
 
 def step_metadata_files():
@@ -126,7 +126,10 @@ hyphen (-) to show continuity. The underscore is used to separate parameters in 
 this parameter within the file name, it must not contain spaces or be too descriptive (e.g. *RedTopEnlighment*).
         
 In this spreadsheet you can add cells (with the `+` button), delete cells or enlarge cells. If you wish to add a new
- cell and apply metadata. Ideally, select the first row and drag. Alternatively, you can copy/paste the line.
+cell and apply metadata. Ideally, select the first row and drag. Alternatively, you can copy/paste the line.
+
+Use the `Add row` button to add a new row pre-filled with the experimental metadata defined in the previous step. 
+If you wish, you can return to the previous page to edit your template and add rows with updated metadata.
     """)
 
     if "dataframe_metadata" not in st.session_state:
@@ -139,17 +142,21 @@ In this spreadsheet you can add cells (with the `+` button), delete cells or enl
     else:
         df = pd.DataFrame([form_data], columns=[*form_data.keys()])
         # New column
-        df['IdentifierAnalysis'] = ""
-        df['Object/Sample'] = ""
-        df['LocalisationAnalysis'] = ""
+        df['IdentifierAnalysis'] = None
+        df['Object/Sample'] = None
+        df['LocalisationAnalysis'] = None
         # ordering
         columns_order = ['IdentifierAnalysis', 'Object/Sample', 'LocalisationAnalysis', *form_data.keys()]
-        df = df[columns_order]
+        st.session_state.dataframe_metadata = df[columns_order]
 
     edited_df = st.data_editor(df, num_rows="dynamic", hide_index=True, key="data_editor")
-    has_changes = not st.session_state["dataframe_metadata"].equals(edited_df)
+
+    st.session_state['has_changes'] = st.session_state["dataframe_metadata"].equals(edited_df)
+    
     # Display dataframe
-    if st.button("Save", disabled=not has_changes):
+    if st.button("Add row", on_click=add_row, args=(edited_df,), help="Add a row with experimental parameters"):
+        st.session_state["dataframe_metadata"] = edited_df
+    if st.button("Save", type="primary", disabled=st.session_state['has_changes']):
         st.session_state["dataframe_metadata"] = edited_df
         st.toast("Changes saved successfully!", icon="✅")
 
