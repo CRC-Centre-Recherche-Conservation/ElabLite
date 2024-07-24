@@ -149,16 +149,17 @@ If you wish, you can return to the previous page to edit your template and add r
         columns_order = ['IdentifierAnalysis', 'Object/Sample', 'LocalisationAnalysis', *form_data.keys()]
         st.session_state.dataframe_metadata = df[columns_order]
 
-    edited_df = st.data_editor(df, num_rows="dynamic", hide_index=True, key="data_editor")
+    edited_df = st.data_editor(df, num_rows="dynamic", hide_index=True)
 
     st.session_state['has_changes'] = st.session_state["dataframe_metadata"].equals(edited_df)
-    
+
     # Display dataframe
     if st.button("Add row", on_click=add_row, args=(edited_df,), help="Add a row with experimental parameters"):
         st.session_state["dataframe_metadata"] = edited_df
     if st.button("Save", type="primary", disabled=st.session_state['has_changes']):
         st.session_state["dataframe_metadata"] = edited_df
         st.toast("Changes saved successfully!", icon="✅")
+        st.rerun()
 
 
 ### METADATA SAVING ###
