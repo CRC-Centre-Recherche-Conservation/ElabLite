@@ -97,8 +97,8 @@ def step_metadata_forms():
 
 def add_row(edited_df: pd.DataFrame):
     """
-    Adds a new row to the DataFrame stored in the Streamlit session state under the key "edited_df".
-
+    Adds a new row to the DataFrame stored in the Streamlit. Return edited df to session state 'dataframe_metadata'
+    :param edited_df: DataFrame storing the data
     """
     df = edited_df
     form_data = st.session_state.form_data
@@ -151,15 +151,18 @@ If you wish, you can return to the previous page to edit your template and add r
 
     edited_df = st.data_editor(df, num_rows="dynamic", hide_index=True)
 
+    # State saving
     st.session_state['has_changes'] = st.session_state["dataframe_metadata"].equals(edited_df)
 
-    # Display dataframe
-    if st.button("Add row", on_click=add_row, args=(edited_df,), help="Add a row with experimental parameters"):
-        st.session_state["dataframe_metadata"] = edited_df
-    if st.button("Save", type="primary", disabled=st.session_state['has_changes']):
-        st.session_state["dataframe_metadata"] = edited_df
-        st.toast("Changes saved successfully!", icon="✅")
-        st.rerun()
+    col4, col1, col2, col3 = st.columns([3, 1, 1, 9])
+    with col2:
+        if st.button("Add row", on_click=add_row, args=(edited_df,), help="Add a row with experimental parameters"):
+            st.session_state["dataframe_metadata"] = edited_df
+    with col1:
+        if st.button("Save", type="primary", disabled=st.session_state['has_changes']):
+            st.session_state["dataframe_metadata"] = edited_df
+            st.toast("Changes saved successfully!", icon="✅")
+            st.rerun()
 
 
 ### METADATA SAVING ###
