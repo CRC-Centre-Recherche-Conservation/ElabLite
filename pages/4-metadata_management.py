@@ -188,7 +188,11 @@ def generate_filename(row: SeriesType, selected_columns: list) -> str:
 
     code = st.session_state['metadata_base']['technical'].code
     date = st.session_state['metadata_base']['date'].strftime('%Y%m%d')
-    new_filename = str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
+    shortname = st.session_state['metadata_base']['project_shortname']
+    if shortname is not None:
+        new_filename = str(date) + "_" + code + "_" + shortname + "_" + "_".join(filename_parts) + extension
+    else:
+        new_filename = str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
     return new_filename.replace("__", "_")
 
 
