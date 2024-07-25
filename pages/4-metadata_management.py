@@ -118,9 +118,10 @@ def display_file_metadata(filenames: list):
     def find_filename(row):
         """check and get filename corresponding to row"""
         for filename in filenames:
-            if row['IdentifierAnalysis'] in filename and row['Object/Sample'] in filename:
-                return filename
-        return ''
+            if row['IdentifierAnalysis'] is not None and row['Object/Sample'] is not None:
+                if row['IdentifierAnalysis'] in filename and row['Object/Sample'] in filename:
+                    return filename
+        return None
 
     df['Filename'] = df.apply(find_filename, axis=1)
     # Filename first
