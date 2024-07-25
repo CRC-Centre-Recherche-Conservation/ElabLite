@@ -10,6 +10,12 @@ menu()
 option = st.sidebar.radio("Options", ["Upload Template", "Select existing template"])
 st.sidebar.divider()
 templates_dir = manage_temp_dir()
+st.markdown("""
+This page allows you to use an authority form template from an electronic laboratory notebook to acquire metadata about 
+one or more experiences. Format: JSON, CSV, ELN
+- `Upload Template`: Import a new template
+- `Select Existing Template`: Use a template already loaded in memory (valid until next reboot).
+""")
 
 ### OPTIONS ###
 if option == "Upload Template":
@@ -24,7 +30,9 @@ if option == "Upload Template":
         st.session_state["step_metadata"] = "step_metadata_base"
         st.session_state['metadata_base'] = {}
         st.session_state['template_metadata'] = None
+        st.session_state["dataframe_metadata"] = None
         st.session_state['form_data'] = {}
+        st.session_state['basic_executed'] = False
         # redirect
         sleep(1.5)
         st.switch_page("pages/2-metadata_forms.py")
@@ -39,6 +47,8 @@ elif option == "Select existing template":
             st.session_state["step_metadata"] = "step_metadata_base"
             st.session_state['metadata_base'] = {}
             st.session_state['template_metadata'] = None
+            st.session_state["dataframe_metadata"] = None
+            st.session_state['basic_executed'] = False
             st.session_state['form_data'] = {}
             # redirect
             st.switch_page("pages/2-metadata_forms.py")

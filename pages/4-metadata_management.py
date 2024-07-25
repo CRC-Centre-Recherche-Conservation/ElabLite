@@ -1,3 +1,4 @@
+import copy
 import os
 import pandas as pd
 from pandas import Series as SeriesType
@@ -12,9 +13,6 @@ from models.technical import TechniqueOption, TECHNIQUES
 from utils.manager import generate_csv, zip_experience, files_management, convert_df
 from utils.menu import menu
 from utils.parser import TemplatesReader
-
-
-
 
 ### BASIC ###
 
@@ -34,13 +32,21 @@ del form_data, metadata_base, dataframe_metadata
 
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
-    st.header("Experience presentation")
+    st.header("Experiment Base")
     if "metadata_base" not in st.session_state or st.session_state['metadata_base'] is None:
         st.session_state["metadata_base"] = {}
 
     metadata = st.session_state["metadata_base"]
 
     with st.container(border=True):
+        # Config Project
+        with st.popover("⚙️  Project Config"):
+            st.markdown("Describe the project")
+            project_longname = st.text_input("Project (longname)", value=metadata.get("project_longname"))
+            project_shortname = st.text_input("Project (shortname)", value=metadata.get("project_shortname"))
+            project_uri = st.text_input("Project (URI)", value=metadata.get("project_uri"),
+                                        help="URL of the project")
+
         title = st.text_input("Title *", help="Title of the experience", value=metadata.get("title", ""))
 
         # Technical box
@@ -65,12 +71,14 @@ def step_metadata_base():
         commentary = st.text_area("Commentary", value=metadata.get("commentary"))
         tags = st_tags(label="tags", maxtags=8, value=metadata.get("tags", []))
         st.divider()
-        rating = st_star_rating(label="Rate you experience", maxValue=5, defaultValue=metadata.get("rating", 0))
+        rating = st_star_rating(label="Rate your experiment", maxValue=5, defaultValue=metadata.get("rating", 0))
 
         submit_enabled = all((title, date, author, technical_code))
         st.session_state["submit_enabled"] = submit_enabled
         st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary,
-                                             'tags': tags, 'rating': rating, 'technical': technical}
+                                             'tags': tags, 'rating': rating, 'technical': technical,
+                                             'project_longname': project_longname,
+                                             'project_shortname': project_shortname, "project_uri": project_uri}
 
 
 ### METADATA INSTRUMENTAL ###
@@ -79,15 +87,20 @@ def step_metadata_forms():
     """Step 2 page - Metadata forms instrumental"""
     if "template_metadata" not in st.session_state:
         st.session_state["template_metadata"] = None
-    st.header("Experience presentation")
+    st.header("Experiment Metadata Preset")
+    original_metadata = reader.read_metadata()
+    working_metadata = copy.deepcopy(original_metadata)
     try:
-        st.session_state['template_metadata'] = reader.read_metadata()
-        with st.expander("General metadata preset"):
+        st.session_state['template_metadata'] = working_metadata
+        with st.expander("General metadata preset", expanded=True):
             st.session_state.required_form = []
             MetadataForms.generate_form(st.session_state['template_metadata'], disabled=True)
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
     except Exception as e:
         st.error(f"Error: {e}")
+    # Re init without modification MetadataForms.generate_form()
+    # To save the good template in .elablite
+    st.session_state['template_metadata'] = original_metadata
 
 
 ### EDITING DATAFRAME FILE ###
@@ -108,11 +121,14 @@ def display_file_metadata(filenames: list):
     def find_filename(row):
         """check and get filename corresponding to row"""
         for filename in filenames:
-            if row['IdentifierAnalysis'] in filename and row['Object/Sample'] in filename:
-                return filename
-        return ''
+            if row['IdentifierAnalysis'] is not None and row['Object/Sample'] is not None:
+                if row['IdentifierAnalysis'] in filename and row['Object/Sample'] in filename:
+                    return filename
+        return None
 
     df['Filename'] = df.apply(find_filename, axis=1)
+    # Filename first
+    df = df[['Filename'] + [col for col in df.columns if col != 'Filename']]
 
     st.session_state["dataframe_metadata_edited"] = st.data_editor(df)
 
@@ -124,7 +140,19 @@ def step_metadata_files():
 
     st.session_state["submit_enabled"] = True
 
-    st.header("Files metadata editor")
+    st.header("Files Mapping Editor")
+    with st.expander("Help", expanded=False):
+        st.markdown("""
+        In order to make the link between metadata and experimental data, you need to import the files in order to
+         perform this mapping.
+
+You can add files more than once, as the table will update automatically.  If a file is not correctly identified, 
+you can add it manually in the `'Filename'` column.
+
+Please note: If you change pages and wish to come back and modify the mapping or other operations, the files are no 
+longer stored in memory. You'll have to redo this work
+        """)
+
     uploaded_files = st.file_uploader("Upload Files", accept_multiple_files=True, key='upload_files')
 
     if uploaded_files:
@@ -134,6 +162,7 @@ def step_metadata_files():
 
     with st.spinner("Processing dataframe..."):
         while not uploaded_files:
+            st.markdown("You need to upload files")
             time.sleep(1)
         file_names = [file.name for file in uploaded_files]
     if file_names is not None:
@@ -162,7 +191,12 @@ def generate_filename(row: SeriesType, selected_columns: list) -> str:
 
     code = st.session_state['metadata_base']['technical'].code
     date = st.session_state['metadata_base']['date'].strftime('%Y%m%d')
-    new_filename = str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
+    shortname = st.session_state['metadata_base']['project_shortname']
+    if shortname is not None:
+        new_filename = str(date) + "_" + code + "_" + shortname + "_" + "_".join(filename_parts) + extension
+    else:
+        new_filename = str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
+    new_filename = new_filename.replace(" ", "")
     return new_filename.replace("__", "_")
 
 
@@ -180,15 +214,17 @@ def generate_newtitle(row: SeriesType, title: str) -> str:
     if pd.notnull(row['IdentifierAnalysis']) or pd.notnull(row['Object/Sample']):
         return f"{title} -- {row['IdentifierAnalysis']}_{row['Object/Sample']}"
     else:
-        return f"{title} -- {row.idx}"
+        return f"{title} -- {row.name}"
 
 
 def step_metadata_download():
     """Step 4 page - Generate new filenameDownload metadata"""
     if "grouped_exp" not in st.session_state:
         st.session_state["grouped_exp"] = False
+    if "filename_validated" not in st.session_state:
+        st.session_state["filename_validated"] = False
 
-    st.header("Download experiences")
+    st.header("Download Experiments")
     st.subheader("Preparing ...")
     df = st.session_state["dataframe_metadata_edited"]
     # Generate alternative titles non-bundled
@@ -198,23 +234,32 @@ def step_metadata_download():
     selected_columns = st.multiselect("Select columns to include in filename (in order)",
                                       [col for col in df.columns.tolist() if col not in exclude_columns])
 
-    col1, col2 = st.columns([4, 7])
-    with col1:
+    col1, col2, col3 = st.columns([1, 7, 17])
+    with col2:
         if st.button("Validation filename"):
             try:
                 df['new_Filename'] = df.apply(lambda x: generate_filename(x, selected_columns), axis=1)
                 st.toast("Success!", icon='🎉')
-                with col2:
+                st.session_state["filename_validated"] = True
+                with col3:
                     alert = st.caption(f"Example: {df['new_Filename'].iloc[0]}")
                     time.sleep(2)
                     alert.empty()
             except Exception as err:
                 st.toast("Failed", icon='🚨')
                 st.info(err)
+    with col1:
+        st.checkbox("check_filename", value=st.session_state["filename_validated"],
+                    disabled=True, label_visibility='hidden')
 
     with st.container():
         st.subheader("Download ...")
 
+        st.markdown("""
+        By checking the toggle, you can group all the files within a single experiment in the electronic laboratory 
+        notebook. On the other hand, if files and its metadata are to be considered separately,
+         the toggle should be unchecked.
+        """)
         st.session_state["grouped_exp"] = st.toggle('Grouping analysis ?',
                                                     help='Activate to group all analyses in one experience')
 
@@ -291,7 +336,7 @@ def previous_step():
 
 ### PAGE ###
 
-st.title("Metadata & Files Management")
+st.title("Metadata & Files Experiments")
 menu()
 
 # check templates
