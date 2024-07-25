@@ -13,9 +13,6 @@ from utils.manager import generate_csv, zip_experience, files_management, conver
 from utils.menu import menu
 from utils.parser import TemplatesReader
 
-
-
-
 ### BASIC ###
 
 # INIT TEMPLATE READER #
@@ -210,7 +207,7 @@ def generate_newtitle(row: SeriesType, title: str) -> str:
     if pd.notnull(row['IdentifierAnalysis']) or pd.notnull(row['Object/Sample']):
         return f"{title} -- {row['IdentifierAnalysis']}_{row['Object/Sample']}"
     else:
-        return f"{title} -- {row.idx}"
+        return f"{title} -- {row.name}"
 
 
 def step_metadata_download():
@@ -247,7 +244,6 @@ def step_metadata_download():
     with col1:
         st.checkbox("check_filename", value=st.session_state["filename_validated"],
                     disabled=True, label_visibility='hidden')
-
 
     with st.container():
         st.subheader("Download ...")
