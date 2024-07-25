@@ -1,3 +1,4 @@
+import copy
 import os
 import pandas as pd
 from pandas import Series as SeriesType
@@ -87,14 +88,19 @@ def step_metadata_forms():
     if "template_metadata" not in st.session_state:
         st.session_state["template_metadata"] = None
     st.header("Experiment Metadata Preset")
+    original_metadata = reader.read_metadata()
+    working_metadata = copy.deepcopy(original_metadata)
     try:
-        st.session_state['template_metadata'] = reader.read_metadata()
+        st.session_state['template_metadata'] = working_metadata
         with st.expander("General metadata preset", expanded=True):
             st.session_state.required_form = []
             MetadataForms.generate_form(st.session_state['template_metadata'], disabled=True)
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
     except Exception as e:
         st.error(f"Error: {e}")
+    # Re init without modification MetadataForms.generate_form()
+    # To save the good template in .elablite
+    st.session_state['template_metadata'] = original_metadata
 
 
 ### EDITING DATAFRAME FILE ###
