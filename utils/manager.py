@@ -113,7 +113,12 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
             for idx, row in df_mtda.iterrows():
                 for col in df_mtda.columns:
                     if col in metadata['extra_fields']:
-                        metadata['extra_fields'][col]['value'] = row[col]
+                        if metadata['extra_fields'][col]['type'] == 'number':
+                            value, unit = row[col].split(' ')
+                            metadata['extra_fields'][col]['value'] = value
+                            metadata['extra_fields'][col]['unit'] = unit
+                        else:
+                            metadata['extra_fields'][col]['value'] = row[col]
                 data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
                         'rating': base_mtda['rating'], 'metadata': metadata, 'tags': base_mtda['tags']}
                 writer.writerow(data)
