@@ -98,14 +98,27 @@ class MetadataForms:
                 value = st.session_state.form_data.get(field_name, field_data['value'])
             else:
                 value = field_data['value']
+
+            if field_type == 'number':
+                if isinstance(value, str) and ' ' in value:
+                    value, unit = value.split(' ', 1)
+                else:
+                    unit = field_data.get('unit')
+
             field_data.pop('value', None)
             field_data.pop('type', None)
+            field_data.pop('unit', None)
+
             # execute
-            field_ = cls(field_name, field_type, value=value, **field_data)
+            field_ = cls(field_name, field_type, value=value, unit=unit, **field_data)
             field_.render(disabled=disabled)
             if field_.required:
                 st.session_state.required_form.append(field_.value)
-            st.session_state.form_data[field_name] = field_.value
+
+            if field_type == 'number' and field_.unit:
+                st.session_state.form_data[field_name] = f"{field_.value} {field_.unit}"
+            else:
+                st.session_state.form_data[field_name] = field_.value
 
     def _render_text_field(self, label: str, disabled: bool):
         """Text field rendering"""
@@ -176,21 +189,18 @@ class MetadataForms:
         col1, col2 = st.columns([8, 2])
         with col1:
             try:
-                self.value = st.number_input(label + " *" if self.required else label,
-                                             value=float(self.value),
+                value = float(self.value)
+            except (ValueError, TypeError):
+                value = 0.0
+            self.value = st.number_input(label + " *" if self.required else label,
+                                             value=value,
                                              help=self.description,
                                              step=None,
-                                             format='%g',
-                                             disabled=disabled)
-            except Exception:
-                self.value = st.number_input(label + " *" if self.required else label,
-                                             value=float(0),
-                                             help=self.description,
-                                             step=None,
-                                             format='%g',
+                                             format="%e",
                                              disabled=disabled)
         with col2:
-            self.value = st.selectbox("Unit", self.units, index=self.units.index(self.unit), disabled=disabled)
+            if self.units:
+                self.unit = st.selectbox("Unit", self.units, index=self.units.index(self.unit), disabled=disabled)
 
     def _render_url_field(self, label: str, disabled: bool):
         """URL field rendering"""
