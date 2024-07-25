@@ -41,6 +41,14 @@ def step_metadata_base():
     metadata = st.session_state["metadata_base"]
 
     with st.container(border=True):
+        # Config Project
+        with st.popover("⚙️  Project Config"):
+            st.markdown("Describe the project")
+            project_longname = st.text_input("Project (longname)", value=metadata.get("project_longname"))
+            project_shortname = st.text_input("Project (shortname)", value=metadata.get("project_shortname"))
+            project_uri = st.text_input("Project (URI)", value=metadata.get("project_uri"),
+                                        help="URL of the project")
+
         title = st.text_input("Title *", help="Title of the experience", value=metadata.get("title", ""))
 
         # Technical box
@@ -70,7 +78,9 @@ def step_metadata_base():
         submit_enabled = all((title, date, author, technical_code))
         st.session_state["submit_enabled"] = submit_enabled
         st.session_state["metadata_base"] = {"title": title, "date": date, "author": author, "commentary": commentary,
-                                             'tags': tags, 'rating': rating, 'technical': technical}
+                                             'tags': tags, 'rating': rating, 'technical': technical,
+                                             'project_longname': project_longname,
+                                             'project_shortname': project_shortname, "project_uri": project_uri}
 
 
 ### METADATA INSTRUMENTAL ###
