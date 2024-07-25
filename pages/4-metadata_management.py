@@ -196,6 +196,7 @@ def generate_filename(row: SeriesType, selected_columns: list) -> str:
         new_filename = str(date) + "_" + code + "_" + shortname + "_" + "_".join(filename_parts) + extension
     else:
         new_filename = str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
+    new_filename = new_filename.replace(" ", "")
     return new_filename.replace("__", "_")
 
 
