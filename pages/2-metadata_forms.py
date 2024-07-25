@@ -158,7 +158,8 @@ If you wish, you can return to the previous page to edit your template and add r
         df['LocalisationAnalysis'] = None
         # ordering
         columns_order = ['IdentifierAnalysis', 'Object/Sample', 'LocalisationAnalysis', *form_data.keys()]
-        st.session_state.dataframe_metadata = df[columns_order]
+        df = df[columns_order]
+        st.session_state.dataframe_metadata = df
 
     edited_df = st.data_editor(df, num_rows="dynamic", hide_index=True)
 
