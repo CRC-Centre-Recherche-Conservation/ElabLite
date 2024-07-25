@@ -37,3 +37,4 @@ def menu():
         if "selected_preset" in st.session_state and st.session_state["selected_preset"] is not None:
             st.page_link("pages/4-metadata_management.py", label="• Complete Experiment(s)")
     st.sidebar.divider()
+    st.session_state['temporary_container'] = st.sidebar.container()
