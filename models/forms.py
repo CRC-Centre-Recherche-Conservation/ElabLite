@@ -99,11 +99,13 @@ class MetadataForms:
             else:
                 value = field_data['value']
 
+            unit = None
             if field_type == 'number':
                 if isinstance(value, str) and ' ' in value:
                     value, unit = value.split(' ', 1)
                 else:
-                    unit = field_data.get('unit')
+                    # Initialize unit as None if it doesn't exist in the JSON
+                    unit = field_data.get('unit', None)
 
             field_data.pop('value', None)
             field_data.pop('type', None)

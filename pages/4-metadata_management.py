@@ -159,13 +159,7 @@ longer stored in memory. You'll have to redo this work
         for uploaded_file in uploaded_files:
             bytes_data = uploaded_file.read()
             st.session_state['uploaded_files'][uploaded_file.name] = bytes_data
-
-    with st.spinner("Processing dataframe..."):
-        while not uploaded_files:
-            st.markdown("You need to upload files")
-            time.sleep(1)
         file_names = [file.name for file in uploaded_files]
-    if file_names is not None:
         st.subheader("Uploaded File Names")
         display_file_metadata(file_names)
 
