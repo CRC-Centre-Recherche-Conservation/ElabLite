@@ -1,0 +1,57 @@
+name: Build and Release ElabLite
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Specify the Node.js version you need
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run dump
+        run: npm run dump
+
+      - name: Build distribution
+        run: npm run dist
+
+      - name: Upload executable
+        id: upload-exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: exe-file
+          path: dist/*.exe
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download executable
+        uses: actions/download-artifact@v4
+        with:
+          name: exe-file
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: dist/*.exe
