@@ -6,6 +6,7 @@ from typing import List, Union
 
 from models.validator import validate_email, validate_url
 
+
 @dataclass
 class MetadataForms:
     """
@@ -40,16 +41,17 @@ class MetadataForms:
     unit: str = None
     units: List[str] = field(default_factory=list)
 
-    def render(self):
+    def render(self, disabled):
         """
         Rendering streamlit widgets according to type detected
+        :param disabled: Whether the widget should be disabled
         """
 
         field_label = self.name.replace('_', ' ')
-        getattr(self, f"_render_{self.field_type}_field")(field_label)
+        getattr(self, f"_render_{self.field_type}_field")(field_label, disabled)
 
     @classmethod
-    def generate_form(cls, metadata):
+    def generate_form(cls, metadata, disabled: bool = False):
         """
         Iteratively generates forms based on metadata.
 
@@ -60,6 +62,7 @@ class MetadataForms:
         Args:
             metadata (dict): A dictionary containing metadata for the form fields. It should include an 'extra_fields' key,
                              which contains the details of each form field such as type, position, group_id, and other attributes.
+            disabled (bool): False as default value. To disable widget editing
 
         Example:
             metadata = {
@@ -79,7 +82,8 @@ class MetadataForms:
             st.session_state.extra_fields = {}
 
         st.session_state['extra_fields'] = metadata.get('extra_fields', {})
-        sorted_fields = sorted(st.session_state['extra_fields'].items(), key=lambda x: x[1]['position'] if 'position' in x[1] else -1)
+        sorted_fields = sorted(st.session_state['extra_fields'].items(),
+                               key=lambda x: x[1]['position'] if 'position' in x[1] else -1)
 
         group_id = cls.group_id
         for field_name, field_data in sorted_fields:
@@ -94,70 +98,124 @@ class MetadataForms:
                 value = st.session_state.form_data.get(field_name, field_data['value'])
             else:
                 value = field_data['value']
+
+            unit = None
+            if field_type == 'number':
+                if isinstance(value, str) and ' ' in value:
+                    value, unit = value.split(' ', 1)
+                else:
+                    # Initialize unit as None if it doesn't exist in the JSON
+                    unit = field_data.get('unit', None)
+
             field_data.pop('value', None)
             field_data.pop('type', None)
+            field_data.pop('unit', None)
+
             # execute
-            field_ = cls(field_name, field_type, value=value, **field_data)
-            field_.render()
+            field_ = cls(field_name, field_type, value=value, unit=unit, **field_data)
+            field_.render(disabled=disabled)
             if field_.required:
                 st.session_state.required_form.append(field_.value)
-            st.session_state.form_data[field_name] = field_.value
 
-    def _render_text_field(self, label: str):
+            if field_type == 'number' and field_.unit:
+                st.session_state.form_data[field_name] = f"{field_.value} {field_.unit}"
+            else:
+                st.session_state.form_data[field_name] = field_.value
+
+    def _render_text_field(self, label: str, disabled: bool):
         """Text field rendering"""
-        self.value = st.text_input(label, value=self.value, help=self.description)
+        self.value = st.text_input(label + " *" if self.required else label,
+                                   value=self.value,
+                                   help=self.description,
+                                   disabled=disabled)
 
-    def _render_select_field(self, label: str):
+    def _render_select_field(self, label: str, disabled: bool):
         """Select field rendering"""
         if self.allow_multi_values:
-            self.value = st.multiselect(label, self.options, default=self.value, help=self.description)
+            self.value = st.multiselect(label + " *" if self.required else label, self.options,
+                                        default=self.value,
+                                        help=self.description,
+                                        disabled=disabled)
         else:
-            self.value = st.selectbox(label, self.options,
+            self.value = st.selectbox(label + " *" if self.required else label, self.options,
                                       index=self.options.index(self.value) if self.value in self.options else 0,
-                                      help=self.description)
+                                      help=self.description,
+                                      disabled=disabled)
 
-    def _render_date_field(self, label: str):
+    def _render_date_field(self, label: str, disabled: bool):
         """Date field rendering"""
         try:
             date_exp = parse(str(self.value))
-            self.value = st.date_input(label, value=date_exp, help=self.description)
+            self.value = st.date_input(label + " *" if self.required else label,
+                                       value=date_exp,
+                                       help=self.description,
+                                       disabled=disabled)
         except ParserError:
-            self.value = st.date_input(label, value=date.today(), help=self.description)
+            self.value = st.date_input(label + " *" if self.required else label,
+                                       value=date.today(),
+                                       help=self.description,
+                                       disabled=disabled)
 
-    def _render_datetime_local_field(self, label: str):
+    def _render_datetime_local_field(self, label: str, disabled: bool):
         """DateTime field rendering"""
-        self.value = st.date_input(label, value=date.today(), help=self.description)
+        self.value = st.date_input(label + " *" if self.required else label,
+                                   value=date.today(),
+                                   help=self.description,
+                                   disabled=disabled)
 
-    def _render_checkbox_field(self, label: str):
+    def _render_checkbox_field(self, label: str, disabled: bool):
         """Checkbox field rendering"""
-        self.value = st.checkbox(label, value=self.value, help=self.description)
+        self.value = st.checkbox(label + " *" if self.required else label,
+                                 value=self.value,
+                                 help=self.description,
+                                 disabled=disabled)
 
-    def _render_email_field(self, label: str):
+    def _render_email_field(self, label: str, disabled: bool):
         """Email field rendering"""
-        self.value = st.text_input(label, value=self.value, help=self.description, on_change=validate_email,
-                                   args=(self.value,))
+        self.value = st.text_input(label + " *" if self.required else label,
+                                   value=self.value,
+                                   help=self.description,
+                                   on_change=validate_email,
+                                   args=(self.value,),
+                                   disabled=disabled)
 
-    def _render_time_field(self, label: str):
+    def _render_time_field(self, label: str, disabled: bool):
         """Time field rendering"""
-        self.value = st.time_input(label, value=self.value, help=self.description)
+        self.value = st.time_input(label + " *" if self.required else label,
+                                   value=self.value,
+                                   help=self.description,
+                                   disabled=disabled)
 
-    def _render_number_field(self, label: str):
+    def _render_number_field(self, label: str, disabled: bool):
         """Number field rendering. In container"""
         col1, col2 = st.columns([8, 2])
         with col1:
             try:
-                self.value = st.number_input(label, value=float(self.value), help=self.description, step=None,
-                                             format='%g')
-            except Exception:
-                self.value = st.number_input(label, value=float(0), help=self.description, step=None, format='%g')
+                value = float(self.value)
+            except (ValueError, TypeError):
+                value = 0.0
+            self.value = st.number_input(label + " *" if self.required else label,
+                                             value=value,
+                                             help=self.description,
+                                             step=None,
+                                             format="%e",
+                                             disabled=disabled)
         with col2:
-            self.value = st.selectbox("Unit", self.units, index=self.units.index(self.unit))
+            if self.units:
+                self.unit = st.selectbox("Unit", self.units, index=self.units.index(self.unit), disabled=disabled)
 
-    def _render_url_field(self, label: str):
+    def _render_url_field(self, label: str, disabled: bool):
         """URL field rendering"""
-        self.value = st.text_input(label, value=self.value, help=self.description, on_change=validate_url,
+        self.value = st.text_input(label + " *" if self.required else label,
+                                   value=self.value,
+                                   help=self.description,
+                                   disabled=disabled,
+                                   on_change=validate_url,
                                    args=(self.value,))
 
-    def _render_radio_field(self, label: str):
+    def _render_radio_field(self, label: str, disabled: bool):
         """Radio render field"""
-        self.value = st.radio(label, value=self.value, help=self.description)
+        self.value = st.radio(label + " *" if self.required else label,
+                              value=self.value,
+                              help=self.description,
+                              disabled=disabled)

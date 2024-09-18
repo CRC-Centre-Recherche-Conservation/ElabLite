@@ -1,6 +1,6 @@
-streamlit>=1.34.0
+streamlit>=1.36.0
 python-dateutil
 validators>=0.28.1
 streamlit-tags>=1.2.8
 st-star-rating>=0.0.6
-toml==0.10.2
+dill>=0.3.8
