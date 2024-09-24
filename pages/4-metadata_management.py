@@ -100,7 +100,7 @@ def step_metadata_forms():
         with st.expander("General metadata preset", expanded=True):
             st.session_state.required_form = []
             MetadataForms.generate_form(st.session_state['template_metadata'], disabled=True)
-            st.session_state["submit_enabled"] = all(st.session_state.required_form)
+            st.session_state["submit_enabled"] = True
     except Exception as e:
         st.error(f"Error: {e}")
     # Re init without modification MetadataForms.generate_form()
@@ -195,7 +195,7 @@ def generate_filename(row: SeriesType, selected_columns: list) -> str:
         new_filename = str(date) + "_" + code + "_" + shortname + "_" + "_".join(filename_parts) + extension
     else:
         new_filename = str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
-    new_filename = new_filename.replace(" ", "")
+    new_filename = new_filename.replace("||", "")
     return new_filename.replace("__", "_")
 
 
