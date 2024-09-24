@@ -17,7 +17,12 @@ from utils.parser import TemplatesReader
 ### BASIC ###
 
 # INIT TEMPLATE READER #
-reader = TemplatesReader(st.session_state["selected_preset"])
+try:
+    reader = TemplatesReader(st.session_state["selected_preset"])
+except KeyError:
+    # Go to home if reload page or anything which delete selected_preset session
+    st.switch_page("app.py")
+
 # Get preset
 metadata_base, form_data = reader.read_preset()
 if metadata_base is not None and form_data is not None:
