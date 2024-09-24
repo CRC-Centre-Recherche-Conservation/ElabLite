@@ -101,7 +101,11 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
             for col in df_mtda.columns:
                 if col in metadata['extra_fields']:
                     if metadata['extra_fields'][col]['type'] == 'number':
-                        value, unit = df_mtda[col].iloc[0].split(' ')
+                        try:
+                            value, unit = df_mtda[col].iloc[0].split(' ')
+                        except ValueError:
+                            st.warning(f"Impossible to parse the value and its unit in the column '{col}'. \
+                            Please check your column content and don't use ' ' in the unit appellation.")
                         metadata['extra_fields'][col]['value'] = value
                         metadata['extra_fields'][col]['unit'] = unit
                     else:
@@ -114,7 +118,11 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                 for col in df_mtda.columns:
                     if col in metadata['extra_fields']:
                         if metadata['extra_fields'][col]['type'] == 'number':
-                            value, unit = row[col].split(' ')
+                            try:
+                                value, unit = row[col].split(' ')
+                            except ValueError:
+                                st.warning(f"Impossible to parse the value and its unit in the column '{col}'. \
+                                Please check your column content and don't use ' ' in the unit appellation.")
                             metadata['extra_fields'][col]['value'] = value
                             metadata['extra_fields'][col]['unit'] = unit
                         else:
