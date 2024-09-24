@@ -274,7 +274,10 @@ def step_metadata_download():
                                                    grouped=st.session_state["grouped_exp"])
                 time.sleep(1)
                 st.write("Zipping...")
-                zip_buffer = zip_experience(csv_, uploaded_files_, logs_process=convert_df(df))
+                zip_buffer = zip_experience(csv_filename=csv_,
+                                            uploaded_files=uploaded_files_,
+                                            logs_process=convert_df(df),
+                                            grouped=st.session_state["grouped_exp"])
                 del uploaded_files_, csv_
                 time.sleep(2)
                 status.update(label="Process complete!", state="complete", expanded=False)

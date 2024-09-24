@@ -114,7 +114,7 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                     else:
                         metadata['extra_fields'][col]['value'] = df_mtda[col].iloc[0]
             data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
-                    'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': base_mtda['tags']}
+                    'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': "|".join(base_mtda['tags'])}
             writer.writerow(data)
         else:
             for idx, row in df_mtda.iterrows():
@@ -142,7 +142,7 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                                                         "position": 1000}
 
                 data = {'date': base_mtda['date'], 'title': row['new_title'], 'body': base_mtda['commentary'],
-                        'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': base_mtda['tags']}
+                        'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': "|".join(base_mtda['tags'])}
                 writer.writerow(data)
         csv_filename = csv_file.name
     return csv_filename
@@ -211,7 +211,8 @@ def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, group
         return new_dict
 
 
-def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]], logs_process: bytes) -> BytesIO:
+def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]],
+                   logs_process: bytes, grouped: bool) -> BytesIO:
     """
     Creates a zip archive containing a CSV file and additional uploaded files.
 
@@ -221,6 +222,8 @@ def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]
             The dictionary should be in the format {folder_name: {file_name: file_data}}.
         logs_process (bytes): Edited dataframe cached to retain all modified information before transformation
             and zipping.
+        grouped (bool): A boolean indicating whether the files should be grouped together in a single dictionary.
+                        If the files are grouped, then we want to obtain a DATAFILE.txt grouping all the project names.
 
     Returns:
         BytesIO: A BytesIO object containing the zip archive.
@@ -248,7 +251,8 @@ def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]
                 file_path = os.path.join(folder_name, file_name)
                 zip_file.writestr(file_path, file_data)
                 file_names.append(file_name)
-            zip_file.writestr(os.path.join(folder_name, 'DATAFILE.txt'), "\n".join(file_names))
+            if grouped:
+                zip_file.writestr(os.path.join(folder_name, 'DATAFILE.txt'), "\n".join(file_names))
     zip_buffer.seek(0)
     os.unlink(csv_filename)
     return zip_buffer
