@@ -37,13 +37,14 @@ def convert_df(df):
     return df.to_csv().encode("utf-8")
 
 @st.cache_data
-def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dict, dataframe_metadata: pd.DataFrame) -> bytes:
+def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dict,
+                    dataframe_metadata: pd.DataFrame) -> bytes:
     """
     Create a serialized binary representation of metadata dictionary. Content .elablite
 
     Args:
-            metadata_base (Dict): A dictionary containing base metadata with keys 'date', 'title', 'commentary', 'rating',
-                            and 'tags'. Related to Page 2 - Step 1 base metadata.
+            metadata_base (Dict): A dictionary containing base metadata with keys 'date', 'title', 'commentary',
+                                'rating' and 'tags'. Related to Page 2 - Step 1 base metadata.
             form_data (Dict): A dictionary containing form of metadata experience.
                                 Related to Page 2 - Step 2 form metadata.
             template_metadata (Dict): Dict of metadata template
@@ -102,10 +103,11 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                 if col in metadata['extra_fields']:
                     if metadata['extra_fields'][col]['type'] == 'number':
                         try:
-                            value, unit = df_mtda[col].iloc[0].split(' ')
+                            value, unit = df_mtda[col].iloc[0].split('||')
                         except ValueError:
                             st.warning(f"Impossible to parse the value and its unit in the column '{col}'. \
-                            Please check your column content and don't use ' ' in the unit appellation.")
+                                        Please check your column content and don't use '||' in the unit appellation \
+                                        but like separator.")
                         metadata['extra_fields'][col]['value'] = value
                         metadata['extra_fields'][col]['unit'] = unit
                     else:
@@ -122,7 +124,8 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                                 value, unit = row[col].split(' ')
                             except ValueError:
                                 st.warning(f"Impossible to parse the value and its unit in the column '{col}'. \
-                                Please check your column content and don't use ' ' in the unit appellation.")
+                                Please check your column content and don't use '||' in the unit appellation but like \
+                                separator.")
                             metadata['extra_fields'][col]['value'] = value
                             metadata['extra_fields'][col]['unit'] = unit
                         else:
