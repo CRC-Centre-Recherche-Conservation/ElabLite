@@ -101,8 +101,8 @@ class MetadataForms:
 
             unit = None
             if field_type == 'number':
-                if isinstance(value, str) and ' ' in value:
-                    value, unit = value.split(' ', 1)
+                if isinstance(value, str) and '||' in value:
+                    value, unit = value.split('||', 1)
                 else:
                     # Initialize unit as None if it doesn't exist in the JSON
                     unit = field_data.get('unit', None)
@@ -118,7 +118,7 @@ class MetadataForms:
                 st.session_state.required_form.append(field_.value)
 
             if field_type == 'number' and field_.unit:
-                st.session_state.form_data[field_name] = f"{field_.value} {field_.unit}"
+                st.session_state.form_data[field_name] = f"{field_.value}||{field_.unit}"
             else:
                 st.session_state.form_data[field_name] = field_.value
 

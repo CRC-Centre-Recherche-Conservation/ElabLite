@@ -104,12 +104,12 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                     if metadata['extra_fields'][col]['type'] == 'number':
                         try:
                             value, unit = df_mtda[col].iloc[0].split('||')
+                            metadata['extra_fields'][col]['value'] = value
+                            metadata['extra_fields'][col]['unit'] = unit
                         except ValueError:
-                            st.warning(f"Impossible to parse the value and its unit in the column '{col}'. \
+                            st.error(f"Impossible to parse the value and its unit in the column '{col}'. \
                                         Please check your column content and don't use '||' in the unit appellation \
                                         but like separator.")
-                        metadata['extra_fields'][col]['value'] = value
-                        metadata['extra_fields'][col]['unit'] = unit
                     else:
                         metadata['extra_fields'][col]['value'] = df_mtda[col].iloc[0]
             data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
@@ -121,13 +121,13 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                     if col in metadata['extra_fields']:
                         if metadata['extra_fields'][col]['type'] == 'number':
                             try:
-                                value, unit = row[col].split(' ')
+                                value, unit = row[col].split('||')
+                                metadata['extra_fields'][col]['value'] = value
+                                metadata['extra_fields'][col]['unit'] = unit
                             except ValueError:
-                                st.warning(f"Impossible to parse the value and its unit in the column '{col}'. \
+                                st.error(f"Impossible to parse the value and its unit in the column '{col}'. \
                                 Please check your column content and don't use '||' in the unit appellation but like \
                                 separator.")
-                            metadata['extra_fields'][col]['value'] = value
-                            metadata['extra_fields'][col]['unit'] = unit
                         else:
                             metadata['extra_fields'][col]['value'] = row[col]
                 data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
