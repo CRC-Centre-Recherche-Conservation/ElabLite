@@ -1,5 +1,6 @@
 import csv
 import dill as pickle
+import json
 import os
 import pandas as pd
 import streamlit as st
@@ -113,7 +114,7 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                     else:
                         metadata['extra_fields'][col]['value'] = df_mtda[col].iloc[0]
             data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
-                    'rating': base_mtda['rating'], 'metadata': metadata, 'tags': base_mtda['tags']}
+                    'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': base_mtda['tags']}
             writer.writerow(data)
         else:
             for idx, row in df_mtda.iterrows():
@@ -130,8 +131,18 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                                 separator.")
                         else:
                             metadata['extra_fields'][col]['value'] = row[col]
+
+                try:
+                    filename = row['new_Filename']
+                except KeyError:
+                    filename = row['Filename']
+
+                metadata['extra_fields']["Filename"] = {"type": "text",
+                                                        "value": filename,
+                                                        "position": 1000}
+
                 data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
-                        'rating': base_mtda['rating'], 'metadata': metadata, 'tags': base_mtda['tags']}
+                        'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': base_mtda['tags']}
                 writer.writerow(data)
         csv_filename = csv_file.name
     return csv_filename
@@ -236,7 +247,7 @@ def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]
             for file_name, file_data in files.items():
                 file_path = os.path.join(folder_name, file_name)
                 zip_file.writestr(file_path, file_data)
-                file_names.append(file_path)
+                file_names.append(file_name)
             zip_file.writestr(os.path.join(folder_name, 'DATAFILE.txt'), "\n".join(file_names))
     zip_buffer.seek(0)
     os.unlink(csv_filename)
