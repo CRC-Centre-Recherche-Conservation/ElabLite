@@ -1,5 +1,6 @@
 import csv
 import dill as pickle
+import json
 import os
 import pandas as pd
 import streamlit as st
@@ -37,13 +38,14 @@ def convert_df(df):
     return df.to_csv().encode("utf-8")
 
 @st.cache_data
-def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dict, dataframe_metadata: pd.DataFrame) -> bytes:
+def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dict,
+                    dataframe_metadata: pd.DataFrame) -> bytes:
     """
     Create a serialized binary representation of metadata dictionary. Content .elablite
 
     Args:
-            metadata_base (Dict): A dictionary containing base metadata with keys 'date', 'title', 'commentary', 'rating',
-                            and 'tags'. Related to Page 2 - Step 1 base metadata.
+            metadata_base (Dict): A dictionary containing base metadata with keys 'date', 'title', 'commentary',
+                                'rating' and 'tags'. Related to Page 2 - Step 1 base metadata.
             form_data (Dict): A dictionary containing form of metadata experience.
                                 Related to Page 2 - Step 2 form metadata.
             template_metadata (Dict): Dict of metadata template
@@ -101,26 +103,46 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
             for col in df_mtda.columns:
                 if col in metadata['extra_fields']:
                     if metadata['extra_fields'][col]['type'] == 'number':
-                        value, unit = df_mtda[col].iloc[0].split(' ')
-                        metadata['extra_fields'][col]['value'] = value
-                        metadata['extra_fields'][col]['unit'] = unit
+                        try:
+                            value, unit = df_mtda[col].iloc[0].split('||')
+                            metadata['extra_fields'][col]['value'] = value
+                            metadata['extra_fields'][col]['unit'] = unit
+                        except ValueError:
+                            st.error(f"Impossible to parse the value and its unit in the column '{col}'. \
+                                        Please check your column content and don't use '||' in the unit appellation \
+                                        but like separator.")
                     else:
                         metadata['extra_fields'][col]['value'] = df_mtda[col].iloc[0]
             data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
-                    'rating': base_mtda['rating'], 'metadata': metadata, 'tags': base_mtda['tags']}
+                    'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': "|".join(base_mtda['tags'])}
             writer.writerow(data)
         else:
             for idx, row in df_mtda.iterrows():
                 for col in df_mtda.columns:
                     if col in metadata['extra_fields']:
                         if metadata['extra_fields'][col]['type'] == 'number':
-                            value, unit = row[col].split(' ')
-                            metadata['extra_fields'][col]['value'] = value
-                            metadata['extra_fields'][col]['unit'] = unit
+                            try:
+                                value, unit = row[col].split('||')
+                                metadata['extra_fields'][col]['value'] = value
+                                metadata['extra_fields'][col]['unit'] = unit
+                            except ValueError:
+                                st.error(f"Impossible to parse the value and its unit in the column '{col}'. \
+                                Please check your column content and don't use '||' in the unit appellation but like \
+                                separator.")
                         else:
                             metadata['extra_fields'][col]['value'] = row[col]
-                data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
-                        'rating': base_mtda['rating'], 'metadata': metadata, 'tags': base_mtda['tags']}
+
+                try:
+                    filename = row['new_Filename']
+                except KeyError:
+                    filename = row['Filename']
+
+                metadata['extra_fields']["Filename"] = {"type": "text",
+                                                        "value": filename,
+                                                        "position": 1000}
+
+                data = {'date': base_mtda['date'], 'title': row['new_title'], 'body': base_mtda['commentary'],
+                        'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': "|".join(base_mtda['tags'])}
                 writer.writerow(data)
         csv_filename = csv_file.name
     return csv_filename
@@ -189,7 +211,8 @@ def files_management(uploaded_files: Dict[str, bytes], df_mtda: DataFrame, group
         return new_dict
 
 
-def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]], logs_process: bytes) -> BytesIO:
+def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]],
+                   logs_process: bytes, grouped: bool) -> BytesIO:
     """
     Creates a zip archive containing a CSV file and additional uploaded files.
 
@@ -199,6 +222,8 @@ def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]
             The dictionary should be in the format {folder_name: {file_name: file_data}}.
         logs_process (bytes): Edited dataframe cached to retain all modified information before transformation
             and zipping.
+        grouped (bool): A boolean indicating whether the files should be grouped together in a single dictionary.
+                        If the files are grouped, then we want to obtain a DATAFILE.txt grouping all the project names.
 
     Returns:
         BytesIO: A BytesIO object containing the zip archive.
@@ -225,8 +250,9 @@ def zip_experience(csv_filename: str, uploaded_files: Dict[str, Dict[str, bytes]
             for file_name, file_data in files.items():
                 file_path = os.path.join(folder_name, file_name)
                 zip_file.writestr(file_path, file_data)
-                file_names.append(file_path)
-            zip_file.writestr(os.path.join(folder_name, 'DATAFILE.txt'), "\n".join(file_names))
+                file_names.append(file_name)
+            if grouped:
+                zip_file.writestr(os.path.join(folder_name, 'DATAFILE.txt'), "\n".join(file_names))
     zip_buffer.seek(0)
     os.unlink(csv_filename)
     return zip_buffer

@@ -17,7 +17,12 @@ from utils.parser import TemplatesReader
 ### BASIC ###
 
 # INIT TEMPLATE READER #
-reader = TemplatesReader(st.session_state["selected_preset"])
+try:
+    reader = TemplatesReader(st.session_state["selected_preset"])
+except KeyError:
+    # Go to home if reload page or anything which delete selected_preset session
+    st.switch_page("app.py")
+
 # Get preset
 metadata_base, form_data = reader.read_preset()
 if metadata_base is not None and form_data is not None:
@@ -95,7 +100,7 @@ def step_metadata_forms():
         with st.expander("General metadata preset", expanded=True):
             st.session_state.required_form = []
             MetadataForms.generate_form(st.session_state['template_metadata'], disabled=True)
-            st.session_state["submit_enabled"] = all(st.session_state.required_form)
+            st.session_state["submit_enabled"] = True
     except Exception as e:
         st.error(f"Error: {e}")
     # Re init without modification MetadataForms.generate_form()
@@ -190,7 +195,7 @@ def generate_filename(row: SeriesType, selected_columns: list) -> str:
         new_filename = str(date) + "_" + code + "_" + shortname + "_" + "_".join(filename_parts) + extension
     else:
         new_filename = str(date) + "_" + code + "_" + "_".join(filename_parts) + extension
-    new_filename = new_filename.replace(" ", "")
+    new_filename = new_filename.replace("||", "")
     return new_filename.replace("__", "_")
 
 
@@ -236,12 +241,11 @@ def step_metadata_download():
                 st.toast("Success!", icon='🎉')
                 st.session_state["filename_validated"] = True
                 with col3:
-                    alert = st.caption(f"Example: {df['new_Filename'].iloc[0]}")
-                    time.sleep(2)
-                    alert.empty()
-            except Exception as err:
+                    st.caption(f"Example: {df['new_Filename'].iloc[0]}")
+            except Exception:
                 st.toast("Failed", icon='🚨')
-                st.info(err)
+                st.warning("Impossible to modify filename. Please, check the column 'filename' to verify \
+                            your file mapping")
     with col1:
         st.checkbox("check_filename", value=st.session_state["filename_validated"],
                     disabled=True, label_visibility='hidden')
@@ -270,7 +274,10 @@ def step_metadata_download():
                                                    grouped=st.session_state["grouped_exp"])
                 time.sleep(1)
                 st.write("Zipping...")
-                zip_buffer = zip_experience(csv_, uploaded_files_, logs_process=convert_df(df))
+                zip_buffer = zip_experience(csv_filename=csv_,
+                                            uploaded_files=uploaded_files_,
+                                            logs_process=convert_df(df),
+                                            grouped=st.session_state["grouped_exp"])
                 del uploaded_files_, csv_
                 time.sleep(2)
                 status.update(label="Process complete!", state="complete", expanded=False)

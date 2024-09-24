@@ -101,8 +101,8 @@ class MetadataForms:
 
             unit = None
             if field_type == 'number':
-                if isinstance(value, str) and ' ' in value:
-                    value, unit = value.split(' ', 1)
+                if isinstance(value, str) and '||' in value:
+                    value, unit = value.split('||', 1)
                 else:
                     # Initialize unit as None if it doesn't exist in the JSON
                     unit = field_data.get('unit', None)
@@ -118,7 +118,7 @@ class MetadataForms:
                 st.session_state.required_form.append(field_.value)
 
             if field_type == 'number' and field_.unit:
-                st.session_state.form_data[field_name] = f"{field_.value} {field_.unit}"
+                st.session_state.form_data[field_name] = f"{field_.value}||{field_.unit}"
             else:
                 st.session_state.form_data[field_name] = field_.value
 
@@ -195,14 +195,42 @@ class MetadataForms:
             except (ValueError, TypeError):
                 value = 0.0
             self.value = st.number_input(label + " *" if self.required else label,
-                                             value=value,
-                                             help=self.description,
-                                             step=None,
-                                             format="%e",
-                                             disabled=disabled)
+                                         value=value,
+                                         help=self.description,
+                                         step=None,
+                                         format="%e",
+                                         disabled=disabled)
+
+        key_found = False
+        n_key = 1
+        unique_key_prefix = "form_1"
+
         with col2:
             if self.units:
-                self.unit = st.selectbox("Unit", self.units, index=self.units.index(self.unit), disabled=disabled)
+                try:
+                    self.unit = st.selectbox(
+                        "Unit",
+                        self.units,
+                        index=self.units.index(self.unit),
+                        disabled=disabled
+                    )
+                    key_found = True
+                except Exception:
+                    while not key_found and n_key < 100:  # Prevent infinite loop
+                        try:
+                            # Continue assigning unique keys in the retry block
+                            self.unit = st.selectbox(
+                                "Unit",
+                                self.units,
+                                index=self.units.index(self.unit),
+                                disabled=disabled,
+                                key=f"{unique_key_prefix}_unit_select_{n_key}"  # Unique key with n_key
+                            )
+                            key_found = True
+                        except Exception:
+                            n_key += 1
+                if not key_found:
+                    st.warning("Failed to generate unit box (key error)")
 
     def _render_url_field(self, label: str, disabled: bool):
         """URL field rendering"""
