@@ -15,7 +15,12 @@ from utils.parser import TemplatesReader
 
 ### BASIC ###
 
-reader = TemplatesReader(st.session_state["selected_template"])
+try:
+    reader = TemplatesReader(st.session_state["selected_template"])
+except KeyError:
+    # Go to home if reload page or anything which delete selected_template session
+    st.switch_page("app.py")
+
 if not st.session_state['basic_executed']:
     # Get preset
     metadata_base, form_data = reader.read_preset()
