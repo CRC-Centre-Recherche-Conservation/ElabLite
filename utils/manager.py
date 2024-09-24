@@ -141,7 +141,7 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                                                         "value": filename,
                                                         "position": 1000}
 
-                data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
+                data = {'date': base_mtda['date'], 'title': row['new_title'], 'body': base_mtda['commentary'],
                         'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': base_mtda['tags']}
                 writer.writerow(data)
         csv_filename = csv_file.name
