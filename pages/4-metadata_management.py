@@ -241,12 +241,11 @@ def step_metadata_download():
                 st.toast("Success!", icon='🎉')
                 st.session_state["filename_validated"] = True
                 with col3:
-                    alert = st.caption(f"Example: {df['new_Filename'].iloc[0]}")
-                    time.sleep(2)
-                    alert.empty()
-            except Exception as err:
+                    st.caption(f"Example: {df['new_Filename'].iloc[0]}")
+            except Exception:
                 st.toast("Failed", icon='🚨')
-                st.info(err)
+                st.warning("Impossible to modify filename. Please, check the column 'filename' to verify \
+                            your file mapping")
     with col1:
         st.checkbox("check_filename", value=st.session_state["filename_validated"],
                     disabled=True, label_visibility='hidden')
