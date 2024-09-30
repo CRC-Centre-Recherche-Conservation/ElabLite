@@ -40,6 +40,7 @@ class MetadataForms:
     allow_multi_values: bool = False
     unit: str = None
     units: List[str] = field(default_factory=list)
+    readonly: bool = False
 
     def render(self, disabled):
         """
@@ -107,6 +108,12 @@ class MetadataForms:
                     # Initialize unit as None if it doesn't exist in the JSON
                     unit = field_data.get('unit', None)
 
+            # Set readonly and prioritize disabled
+            readonly = field_data.get('readonly', False)
+            if not disabled:
+                disabled = readonly
+
+            # cleaning
             field_data.pop('value', None)
             field_data.pop('type', None)
             field_data.pop('unit', None)
