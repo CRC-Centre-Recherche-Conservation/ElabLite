@@ -247,3 +247,42 @@ class MetadataForms:
                               value=self.value,
                               help=self.description,
                               disabled=disabled)
+
+    def _render_items_field(self, label: str, disabled: bool):
+        """Items render field"""
+        try:
+            value = int(self.value)
+        except (ValueError, TypeError):
+            value = 0
+        self.value = st.number_input(label + " *" if self.required else label,
+                                     value=value,
+                                     help=self.description,
+                                     step=1,
+                                     format=None,
+                                     disabled=disabled)
+
+    def _render_users_field(self, label: str, disabled: bool):
+        """Users render field"""
+        try:
+            value = int(self.value)
+        except (ValueError, TypeError):
+            value = 0
+        self.value = st.number_input(label + " *" if self.required else label,
+                                     value=value,
+                                     help=self.description,
+                                     step=1,
+                                     format=None,
+                                     disabled=disabled)
+
+    def _render_experiments_field(self, label: str, disabled: bool):
+        """Experiments render field"""
+        try:
+            value = int(self.value)
+        except (ValueError, TypeError):
+            value = 0
+        self.value = st.number_input(label + " *" if self.required else label,
+                                     value=value,
+                                     help=self.description,
+                                     step=1,
+                                     format=None,
+                                     disabled=disabled)
