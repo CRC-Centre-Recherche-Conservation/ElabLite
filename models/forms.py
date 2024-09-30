@@ -108,10 +108,11 @@ class MetadataForms:
                     # Initialize unit as None if it doesn't exist in the JSON
                     unit = field_data.get('unit', None)
 
-            # Set readonly and prioritize disabled
             readonly = field_data.get('readonly', False)
             if not disabled:
-                disabled = readonly
+                disabled_ = readonly
+            else:
+                disabled_ = disabled
 
             # cleaning
             field_data.pop('value', None)
@@ -120,7 +121,7 @@ class MetadataForms:
 
             # execute
             field_ = cls(field_name, field_type, value=value, unit=unit, **field_data)
-            field_.render(disabled=disabled)
+            field_.render(disabled=disabled_)
             if field_.required:
                 st.session_state.required_form.append(field_.value)
 
