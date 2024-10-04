@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.CRC_ELABLITE_WORKFLOWN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -30,7 +28,9 @@ jobs:
         run: npm run dump
 
       - name: Build distribution
-        run: npm run dist
+        run: |
+          set GH_TOKEN=${{ secrets.CRC_ELABLITE_WORKFLOWN }}
+          npm run dist
 
       - name: Upload executable
         id: upload-exe
