@@ -53,8 +53,9 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.CRC_TK_ELAB }}
         with:
-          token: ${{ secrets.CRC_TK_ELAB }}
           draft: false
           prerelease: false
           generate_release_notes: true
