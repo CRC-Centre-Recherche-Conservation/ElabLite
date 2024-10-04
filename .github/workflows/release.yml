@@ -54,7 +54,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.CRC_ELABLITE_WORKFLOWN }}
         with:
           draft: false
           prerelease: false
