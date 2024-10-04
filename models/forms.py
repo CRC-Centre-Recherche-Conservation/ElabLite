@@ -40,6 +40,7 @@ class MetadataForms:
     allow_multi_values: bool = False
     unit: str = None
     units: List[str] = field(default_factory=list)
+    readonly: bool = False
 
     def render(self, disabled):
         """
@@ -107,13 +108,20 @@ class MetadataForms:
                     # Initialize unit as None if it doesn't exist in the JSON
                     unit = field_data.get('unit', None)
 
+            readonly = field_data.get('readonly', False)
+            if not disabled:
+                disabled_ = readonly
+            else:
+                disabled_ = disabled
+
+            # cleaning
             field_data.pop('value', None)
             field_data.pop('type', None)
             field_data.pop('unit', None)
 
             # execute
             field_ = cls(field_name, field_type, value=value, unit=unit, **field_data)
-            field_.render(disabled=disabled)
+            field_.render(disabled=disabled_)
             if field_.required:
                 st.session_state.required_form.append(field_.value)
 
@@ -247,3 +255,42 @@ class MetadataForms:
                               value=self.value,
                               help=self.description,
                               disabled=disabled)
+
+    def _render_items_field(self, label: str, disabled: bool):
+        """Items render field"""
+        try:
+            value = int(self.value)
+        except (ValueError, TypeError):
+            value = 0
+        self.value = st.number_input(label + " *" if self.required else label,
+                                     value=value,
+                                     help=self.description,
+                                     step=1,
+                                     format=None,
+                                     disabled=disabled)
+
+    def _render_users_field(self, label: str, disabled: bool):
+        """Users render field"""
+        try:
+            value = int(self.value)
+        except (ValueError, TypeError):
+            value = 0
+        self.value = st.number_input(label + " *" if self.required else label,
+                                     value=value,
+                                     help=self.description,
+                                     step=1,
+                                     format=None,
+                                     disabled=disabled)
+
+    def _render_experiments_field(self, label: str, disabled: bool):
+        """Experiments render field"""
+        try:
+            value = int(self.value)
+        except (ValueError, TypeError):
+            value = 0
+        self.value = st.number_input(label + " *" if self.required else label,
+                                     value=value,
+                                     help=self.description,
+                                     step=1,
+                                     format=None,
+                                     disabled=disabled)
