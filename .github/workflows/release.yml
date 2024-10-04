@@ -54,6 +54,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
+          token: ${{ secrets.CRC_TK_ELAB }}
           draft: false
           prerelease: false
           generate_release_notes: true
