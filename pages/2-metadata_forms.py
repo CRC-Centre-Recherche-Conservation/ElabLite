@@ -12,7 +12,7 @@ from models.technical import TechniqueOption, TECHNIQUES
 from utils.menu import menu
 from utils.parser import TemplatesReader
 from utils.save_manager import SaveManager
-
+from utils.stepper import WorkflowStepper
 ### BASIC ###
 
 try:
@@ -363,7 +363,10 @@ def display_forms():
     Displays forms based on the current step in the application flow.
     """
     st.info(f"""You are using the template `{st.session_state["selected_template"]}`""")
+
     current_step = st.session_state["step_metadata"]
+    WorkflowStepper.render(current_step, step_type="step")
+
     st.session_state["submit_enabled"] = False
 
     if current_step == "step_metadata_base":
