@@ -13,6 +13,7 @@ from models.technical import TechniqueOption, TECHNIQUES
 from utils.manager import generate_csv, zip_experience, files_management, convert_df
 from utils.menu import menu
 from utils.parser import TemplatesReader
+from utils.stepper import WorkflowStepper
 
 ### BASIC ###
 
@@ -299,7 +300,10 @@ def display_forms():
     Displays forms based on the current step in the application flow.
     """
     st.info(f"""You are using the template `{st.session_state["selected_preset"]}`""")
+
     current_step = st.session_state["preset_metadata"]
+    WorkflowStepper.render(current_step, step_type="preset")
+
     st.session_state["submit_enabled"] = False
     if current_step == "preset_metadata_base":
         step_metadata_base()
