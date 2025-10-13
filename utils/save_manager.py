@@ -1,29 +1,58 @@
 import streamlit as st
 from typing import Dict
 import pandas as pd
+from datetime import datetime
 from utils.manager import auto_save_experiment, get_current_save_path, set_current_save_path, create_elablite
 
 
 class SaveManager:
     """
     Manage save operations for experiments with Save and Save As functionality
-    Enhanced version with persistent save support across all steps
-    FIXED: Better error handling and validation
     """
 
     @staticmethod
     def get_current_save_path() -> str:
-        """
-        Get the current save path from session state
-        Wrapper for backward compatibility
-        """
+        """Get the current save path from session state"""
         return get_current_save_path()
+
+    @staticmethod
+    def initialize_save_indicator():
+        """
+        Initialize save indicator system
+        Call this at the start of each page
+        """
+        if 'last_save_time' not in st.session_state:
+            st.session_state['last_save_time'] = None
+
+    @staticmethod
+    def render_save_indicator():
+        """
+        Render save status indicator
+        Shows last save time
+        """
+        SaveManager.initialize_save_indicator()
+
+        last_save = st.session_state.get('last_save_time')
+
+        if last_save:
+            time_ago = (datetime.now() - last_save).total_seconds()
+            if time_ago < 60:
+                st.caption(f"💾 Last saved {int(time_ago)}s ago")
+            elif time_ago < 3600:
+                st.caption(f"💾 Last saved {int(time_ago / 60)}m ago")
+            else:
+                st.caption(f"💾 Last saved {int(time_ago / 3600)}h ago")
+        else:
+            current_path = get_current_save_path()
+            if current_path:
+                st.caption("💾 Ready to save")
+            else:
+                st.caption("⚠️ No save file yet")
 
     @staticmethod
     def perform_save_current() -> bool:
         """
-        Perform save on the current file path
-        Used by persistent save buttons across steps
+        Perform save on the current file path (manual save)
 
         Returns:
             bool: True if save was successful
@@ -32,7 +61,11 @@ class SaveManager:
         if not current_path:
             return False
 
-        return SaveManager._perform_save(current_path)
+        result = SaveManager._perform_save(current_path)
+        if result:
+            # Update save timestamp
+            st.session_state['last_save_time'] = datetime.now()
+        return result
 
     @staticmethod
     def render_save_buttons():
@@ -52,6 +85,7 @@ class SaveManager:
                          help="Save to current file" if not save_disabled else "No file selected. Use Save As"):
                 if SaveManager._perform_save(current_path):
                     st.toast("✅ Saved successfully!", icon="✅")
+                    st.session_state['last_save_time'] = datetime.now()
                     save_performed = True
                 else:
                     st.toast("❌ Save failed", icon="❌")
@@ -73,7 +107,6 @@ class SaveManager:
     def _validate_save_data() -> tuple[bool, str]:
         """
         Validate that all required data for save is present
-        More permissive version - template_metadata can be empty at Step 1
 
         Returns:
             tuple: (is_valid, error_message)
@@ -93,16 +126,14 @@ class SaveManager:
         if not metadata_base.get('technical'):
             return False, "Missing technical field"
 
-        # Check template_metadata - Initialize if missing (can be empty dict at Step 1)
+        # Check template_metadata - Initialize if missing
         if 'template_metadata' not in st.session_state:
-            # Try to load it from reader
             try:
                 from utils.parser import TemplatesReader
                 if 'selected_template' in st.session_state:
                     reader = TemplatesReader(st.session_state["selected_template"])
                     st.session_state['template_metadata'] = reader.read_metadata()
                 else:
-                    # If no template selected, use empty dict
                     st.session_state['template_metadata'] = {'extra_fields': {}}
             except Exception:
                 st.session_state['template_metadata'] = {'extra_fields': {}}
@@ -132,7 +163,6 @@ class SaveManager:
             # VALIDATE DATA FIRST
             is_valid, error_msg = SaveManager._validate_save_data()
             if not is_valid:
-                st.error(f"⚠️ Cannot save: {error_msg}")
                 return False
 
             # Collect all necessary data from session state
@@ -167,9 +197,6 @@ class SaveManager:
             return True
 
         except Exception as e:
-            st.error(f"❌ Error during save: {str(e)}")
-            import traceback
-            st.error(f"Details: {traceback.format_exc()}")
             return False
 
     @staticmethod
@@ -222,32 +249,20 @@ class SaveManager:
                     if SaveManager._perform_save(f"{filename}.elablite"):
                         st.success(f"✅ Saved as: {filename}.elablite")
                         st.session_state['save_as_complete'] = True
+                        st.session_state['last_save_time'] = datetime.now()
                         # Wait a bit before rerun to show success message
                         import time
                         time.sleep(1)
                         st.rerun()
-                    # Error is already shown by _perform_save
 
         with col2:
             if st.button("Cancel", use_container_width=True):
                 st.rerun()
 
     @staticmethod
-    def auto_save_on_change():
-        """
-        Perform auto-save when data changes
-        Should be called in callbacks
-        """
-        # Only auto-save if we have a current save path
-        current_path = get_current_save_path()
-        if current_path:
-            SaveManager._perform_save(current_path)
-
-    @staticmethod
     def render_download_section():
         """
         Render download section for manual file export
-        Enhanced version with better messaging and validation
         """
         st.markdown("""
         Download a copy of your experiment file to your computer for:

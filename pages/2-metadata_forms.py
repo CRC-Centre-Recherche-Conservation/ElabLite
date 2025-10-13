@@ -9,7 +9,6 @@ from streamlit_tags import st_tags
 
 from models.forms import MetadataForms
 from models.technical import TechniqueOption, TECHNIQUES
-from utils.manager import create_elablite
 from utils.menu import menu
 from utils.parser import TemplatesReader
 from utils.save_manager import SaveManager
@@ -40,10 +39,10 @@ if not st.session_state['basic_executed']:
 
 def render_persistent_save_button():
     """
-    Affiche un bouton Save persistant en haut à droite de la page
-    Visible sur Steps 2, 3 et 4
+    Displays a persistent Save button at the top right of the page
+    + Auto-save indicator
     """
-    # Créer une zone fixe en haut à droite avec CSS
+    # Create a fixed area at the top right with CSS
     st.markdown("""
         <style>
         .save-button-container {
@@ -59,11 +58,19 @@ def render_persistent_save_button():
         </style>
     """, unsafe_allow_html=True)
 
-    # Conteneur pour le bouton
-    with st.container():
-        col1, col2, col3 = st.columns([6, 2, 2])
+    # Initialize auto-save
+    SaveManager.initialize_save_indicator()
 
-        with col2:
+    # Button container
+    with st.container():
+        # Save indicator at top
+        SaveManager.render_save_indicator()
+
+        st.divider()
+
+        col1, col2, col3 = st.columns([4, 2, 4])
+
+        with col1:
             current_path = SaveManager.get_current_save_path()
             if current_path:
                 if st.button("💾 Save", key=f"save_persistent_{st.session_state['step_metadata']}",
@@ -79,15 +86,15 @@ def render_persistent_save_button():
         with col3:
             # Afficher le nom du fichier actuel si existe
             if current_path:
+                import os
                 filename = os.path.basename(current_path)
                 st.caption(f"📁 {filename[:20]}...")
 
 
 def step_metadata_base():
-    """Step 1 page - Base forms experience - AVEC SAUVEGARDE INITIALE"""
+    """Step 1 page - Base forms experience"""
     st.header("Experiment Base")
 
-    # IMPORTANT : Initialiser template_metadata dès le Step 1 pour permettre la sauvegarde
     if "template_metadata" not in st.session_state or st.session_state["template_metadata"] is None:
         original_metadata = reader.read_metadata()
         st.session_state['template_metadata'] = original_metadata
@@ -137,13 +144,12 @@ def step_metadata_base():
                                              'project_longname': project_longname,
                                              'project_shortname': project_shortname, "project_uri": project_uri}
 
-    # Section de sauvegarde initiale AVANT d'aller au Step 2
+    # Save section
     if submit_enabled:
         st.divider()
         st.markdown("### 💾 Save your experiment before continuing")
         st.info("💡 Save your experiment to continue working on it later. You can modify it anytime.")
 
-        # Afficher Save ou Save As selon le contexte
         col1, col2, col3 = st.columns([3, 2, 5])
 
         with col1:
@@ -167,7 +173,7 @@ def step_metadata_base():
 ### METADATA INSTRUMENTAL ###
 
 def step_metadata_forms():
-    """Step 2 page - Metadata forms instrumental - AVEC BOUTON SAVE PERSISTANT"""
+    """Step 2 page - Metadata forms instrumental"""
 
     # Bouton Save persistant en haut
     render_persistent_save_button()
@@ -267,7 +273,12 @@ If you wish, you can return to the previous page to edit your template and add r
     with col1:
         if st.button("Apply", type="primary", disabled=st.session_state['has_changes']):
             st.session_state["dataframe_metadata"] = edited_df
-            st.toast("Changes applied!", icon="✅")
+
+            if SaveManager.perform_save_current():
+                st.toast("✅ Changes applied and saved!", icon="✅")
+            else:
+                st.toast("✅ Changes applied!", icon="✅")
+
             st.rerun()
 
 
