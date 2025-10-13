@@ -95,23 +95,24 @@ def set_current_save_path(filepath: str):
 
 @st.cache_data
 def convert_df(df):
-    """cache dataframe"""
+    """
+    Cache dataframe conversion to CSV
+    """
     return df.to_csv().encode("utf-8")
 
 
-@st.cache_data
 def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dict,
                     dataframe_metadata: pd.DataFrame) -> bytes:
     """
     Create a serialized binary representation of metadata dictionary. Content .elablite
 
     Args:
-            metadata_base (Dict): A dictionary containing base metadata with keys 'date', 'title', 'commentary',
-                                'rating' and 'tags'. Related to Page 2 - Step 1 base metadata.
-            form_data (Dict): A dictionary containing form of metadata experience.
-                                Related to Page 2 - Step 2 form metadata.
-            template_metadata (Dict): Dict of metadata template
-            dataframe_metadata (DataFrame): DataFrame of metadata edited by analysis
+        metadata_base (Dict): A dictionary containing base metadata with keys 'date', 'title', 'commentary',
+                            'rating' and 'tags'. Related to Page 2 - Step 1 base metadata.
+        form_data (Dict): A dictionary containing form of metadata experience.
+                            Related to Page 2 - Step 2 form metadata.
+        template_metadata (Dict): Dict of metadata template
+        dataframe_metadata (DataFrame): DataFrame of metadata edited by analysis
 
     Returns:
         bytes: Serialized binary data representing the metadata dictionary.
@@ -129,33 +130,33 @@ def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dic
 
 def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
     """
-        Generates a CSV file from base metadata and a DataFrame of additional metadata.
+    Generates a CSV file from base metadata and a DataFrame of additional metadata.
 
-        Args:
-            base_mtda (Dict): A dictionary containing base metadata with keys 'date', 'title', 'commentary', 'rating',
-                            and 'tags'. Related to Page 2 - Step 1 base metadata.
-            df_mtda (pd.DataFrame): A DataFrame containing experience metadata. Related to Page 2 - Step 2 and 3 forms
-                                    metadata and dataframe editor.
-            grouped (bool): A boolean indicating whether the experiences and files should be bundled. Related to
-                            Page 4 - button grouped.
+    Args:
+        base_mtda (Dict): A dictionary containing base metadata with keys 'date', 'title', 'commentary', 'rating',
+                        and 'tags'. Related to Page 2 - Step 1 base metadata.
+        df_mtda (pd.DataFrame): A DataFrame containing experience metadata. Related to Page 2 - Step 2 and 3 forms
+                                metadata and dataframe editor.
+        grouped (bool): A boolean indicating whether the experiences and files should be bundled. Related to
+                        Page 4 - button grouped.
 
-        Returns:
-            str: The file path to the generated CSV file.
+    Returns:
+        str: The file path to the generated CSV file.
 
-        Example:
-            base_mtda = {
-                'date': '2024-06-06',
-                'title': 'Sample Title',
-                'commentary': 'Sample commentary',
-                'rating': 5,
-                'tags': 'sample,example'
-            }
-            df_mtda = pd.DataFrame({
-                'extra_field1': ['value1', 'value2'],
-                'extra_field2': ['value3', 'value4']
-            })
-            csv_filename = generate_csv(base_mtda, df_mtda, grouped=False)
-        """
+    Example:
+        base_mtda = {
+            'date': '2024-06-06',
+            'title': 'Sample Title',
+            'commentary': 'Sample commentary',
+            'rating': 5,
+            'tags': 'sample,example'
+        }
+        df_mtda = pd.DataFrame({
+            'extra_field1': ['value1', 'value2'],
+            'extra_field2': ['value3', 'value4']
+        })
+        csv_filename = generate_csv(base_mtda, df_mtda, grouped=False)
+    """
     headers = ['date', 'title', 'body', 'rating', 'metadata', 'tags']
     with NamedTemporaryFile(mode='w', newline='', delete=False, suffix='.csv', encoding='utf-8') as csv_file:
         metadata = st.session_state['template_metadata']
