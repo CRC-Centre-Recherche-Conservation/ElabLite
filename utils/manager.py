@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import streamlit as st
 import zipfile
+from datetime import datetime
 from io import BytesIO
 from pandas import DataFrame
 from tempfile import NamedTemporaryFile, gettempdir
@@ -32,10 +33,71 @@ def manage_temp_dir(child: str = None) -> str:
     return templates_dir
 
 
+def auto_save_experiment(metadata_base: Dict, form_data: Dict, template_metadata: Dict,
+                         dataframe_metadata: pd.DataFrame, filename: str = None) -> str:
+    """
+    Auto-save the current experiment state to a temporary file
+
+    Args:
+        metadata_base (Dict): Base metadata dictionary
+        form_data (Dict): Form data dictionary
+        template_metadata (Dict): Template metadata dictionary
+        dataframe_metadata (DataFrame): Dataframe of metadata
+        filename (str, optional): Custom filename. If None, uses auto-generated name
+
+    Returns:
+        str: Path to the saved file
+    """
+    templates_dir = manage_temp_dir(child='presets')
+
+    if filename is None:
+        # Generate automatic filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        title = metadata_base.get('title', 'untitled').replace(' ', '_')[:30]
+        filename = f"autosave_{title}_{timestamp}.elablite"
+    elif not filename.endswith('.elablite'):
+        filename = f"{filename}.elablite"
+
+    filepath = os.path.join(templates_dir, filename)
+
+    elablite_data = create_elablite(
+        metadata_base=metadata_base,
+        form_data=form_data,
+        template_metadata=template_metadata,
+        dataframe_metadata=dataframe_metadata
+    )
+
+    with open(filepath, 'wb') as f:
+        f.write(elablite_data)
+
+    return filepath
+
+
+def get_current_save_path() -> str:
+    """
+    Get the current save path from session state
+
+    Returns:
+        str: Current save path or None
+    """
+    return st.session_state.get('current_save_path', None)
+
+
+def set_current_save_path(filepath: str):
+    """
+    Set the current save path in session state
+
+    Args:
+        filepath (str): Path to set as current save
+    """
+    st.session_state['current_save_path'] = filepath
+
+
 @st.cache_data
 def convert_df(df):
     """cache dataframe"""
     return df.to_csv().encode("utf-8")
+
 
 @st.cache_data
 def create_elablite(metadata_base: Dict, form_data: Dict, template_metadata: Dict,
@@ -114,7 +176,8 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                     else:
                         metadata['extra_fields'][col]['value'] = df_mtda[col].iloc[0]
             data = {'date': base_mtda['date'], 'title': base_mtda['title'], 'body': base_mtda['commentary'],
-                    'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': "|".join(base_mtda['tags'])}
+                    'rating': base_mtda['rating'], 'metadata': json.dumps(metadata),
+                    'tags': "|".join(base_mtda['tags'])}
             writer.writerow(data)
         else:
             for idx, row in df_mtda.iterrows():
@@ -142,7 +205,8 @@ def generate_csv(base_mtda: Dict, df_mtda: DataFrame, grouped: bool) -> str:
                                                         "position": 1000}
 
                 data = {'date': base_mtda['date'], 'title': row['new_title'], 'body': base_mtda['commentary'],
-                        'rating': base_mtda['rating'], 'metadata': json.dumps(metadata), 'tags': "|".join(base_mtda['tags'])}
+                        'rating': base_mtda['rating'], 'metadata': json.dumps(metadata),
+                        'tags': "|".join(base_mtda['tags'])}
                 writer.writerow(data)
         csv_filename = csv_file.name
     return csv_filename

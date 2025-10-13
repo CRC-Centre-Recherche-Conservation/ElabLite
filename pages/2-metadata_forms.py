@@ -9,9 +9,9 @@ from streamlit_tags import st_tags
 
 from models.forms import MetadataForms
 from models.technical import TechniqueOption, TECHNIQUES
-from utils.manager import create_elablite
 from utils.menu import menu
 from utils.parser import TemplatesReader
+from utils.save_manager import SaveManager
 
 ### BASIC ###
 
@@ -140,7 +140,7 @@ def step_metadata_files():
 hyphen (-) to show continuity. The underscore is used to separate parameters in the file name.
 - `LocalisationAnalysis` : description area to help locate and differentiate the analysis. If you later wish to keep 
 this parameter within the file name, it must not contain spaces or be too descriptive (e.g. *RedTopEnlighment*).
-        
+
 In this spreadsheet you can add cells (with the `+` button), delete cells or enlarge cells. If you wish to add a new
 cell and apply metadata. Ideally, select the first row and drag. Alternatively, you can copy/paste the line.
 
@@ -185,23 +185,54 @@ If you wish, you can return to the previous page to edit your template and add r
 ### METADATA SAVING ###
 
 def step_metadata_download():
-    """Step 3 page - Metadata download to elablite format"""
-    filename = st.text_input("Filename", help='Enter the filename of your metadat preset. Ex: experience name')
-    if not filename.strip():
-        st.session_state["submit_enabled"] = True
-    else:
-        st.session_state["submit_enabled"] = False
+    """Step 4 page - Save management with Save/Save As buttons and Download option"""
+    st.header("💾 Save & Export Experiment")
 
-    st.download_button(
-        label="Download elablite",
-        data=create_elablite(metadata_base=st.session_state["metadata_base"],
-                             form_data=st.session_state["form_data"],
-                             template_metadata=st.session_state["template_metadata"],
-                             dataframe_metadata=st.session_state["dataframe_metadata"]),
-        file_name=f"{filename}.elablite",
-        mime="application/octet-stream",
-        disabled=st.session_state["submit_enabled"]
-    )
+    # Add tabs for better organization
+    tab1, tab2 = st.tabs(["💾 Quick Save", "📥 Export to File"])
+
+    with tab1:
+        st.markdown("""
+        ### Quick Save
+        Save your experiment to the application's memory. These saves are accessible from the "Load Experiment" menu.
+        """)
+
+        # Render Save/Save As buttons
+        SaveManager.render_save_buttons()
+
+        st.info("💡 **Tip:** Quick saves are stored temporarily and will be available until the application restarts.")
+
+        # Show list of recent saves
+        with st.expander("📋 Recent Saves", expanded=False):
+            from utils.manager import manage_temp_dir
+            import os
+
+            templates_dir = manage_temp_dir(child='presets')
+            saves = sorted(
+                [f for f in os.listdir(templates_dir) if f.endswith('.elablite')],
+                key=lambda x: os.path.getmtime(os.path.join(templates_dir, x)),
+                reverse=True
+            )[:10]
+
+            if saves:
+                st.markdown("**Recent experiment saves:**")
+                for save in saves:
+                    mtime = os.path.getmtime(os.path.join(templates_dir, save))
+                    mtime_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+                    st.text(f"📄 {save} (Modified: {mtime_str})")
+            else:
+                st.text("No recent saves found")
+
+    with tab2:
+        st.markdown("""
+        ### Export to File
+        Download the experiment file to your computer for archiving or sharing.
+        """)
+
+        # Render download section
+        SaveManager.render_download_section()
+
+        st.info("💡 **Tip:** Downloaded files can be re-imported later using the 'Load Experiment' page.")
 
 
 ### INTERN PAGE MANAGEMENT ###
