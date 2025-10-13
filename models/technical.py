@@ -16,7 +16,7 @@ class TechniqueOption:
         return new_technique
 
     @staticmethod
-    @st.experimental_dialog("Add a technical analysis")
+    @st.dialog("Add a technical analysis")
     def open_add_technique_modal():
         st.write("You can add a new technical code if it does not exist.")
         with st.form("add_technique_form"):
