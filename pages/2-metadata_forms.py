@@ -9,10 +9,10 @@ from streamlit_tags import st_tags
 
 from models.forms import MetadataForms
 from models.technical import TechniqueOption, TECHNIQUES
-from utils.manager import create_elablite
 from utils.menu import menu
 from utils.parser import TemplatesReader
-
+from utils.save_manager import SaveManager
+from utils.stepper import WorkflowStepper
 ### BASIC ###
 
 try:
@@ -37,9 +37,67 @@ if not st.session_state['basic_executed']:
     st.session_state['basic_executed'] = True
 
 
+def render_persistent_save_button():
+    """
+    Displays a persistent Save button at the top right of the page
+    + Auto-save indicator
+    """
+    # Create a fixed area at the top right with CSS
+    st.markdown("""
+        <style>
+        .save-button-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 999;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Initialize auto-save
+    SaveManager.initialize_save_indicator()
+
+    # Button container
+    with st.container():
+        # Save indicator at top
+        SaveManager.render_save_indicator()
+
+        st.divider()
+
+        col1, col2, col3 = st.columns([4, 2, 4])
+
+        with col1:
+            current_path = SaveManager.get_current_save_path()
+            if current_path:
+                if st.button("💾 Save", key=f"save_persistent_{st.session_state['step_metadata']}",
+                             type="primary", use_container_width=True):
+                    if SaveManager.perform_save_current():
+                        st.toast("✅ Saved successfully!", icon="✅")
+                        st.rerun()
+            else:
+                if st.button("💾 Save As", key=f"saveas_persistent_{st.session_state['step_metadata']}",
+                             type="primary", use_container_width=True):
+                    SaveManager.show_save_as_dialog()
+
+        with col3:
+            # Afficher le nom du fichier actuel si existe
+            if current_path:
+                import os
+                filename = os.path.basename(current_path)
+                st.caption(f"📁 {filename[:20]}...")
+
+
 def step_metadata_base():
     """Step 1 page - Base forms experience"""
     st.header("Experiment Base")
+
+    if "template_metadata" not in st.session_state or st.session_state["template_metadata"] is None:
+        original_metadata = reader.read_metadata()
+        st.session_state['template_metadata'] = original_metadata
 
     metadata = st.session_state["metadata_base"]
 
@@ -86,16 +144,48 @@ def step_metadata_base():
                                              'project_longname': project_longname,
                                              'project_shortname': project_shortname, "project_uri": project_uri}
 
+    # Save section
+    if submit_enabled:
+        st.divider()
+        st.markdown("### 💾 Save your experiment before continuing")
+        st.info("💡 Save your experiment to continue working on it later. You can modify it anytime.")
+
+        col1, col2, col3 = st.columns([3, 2, 5])
+
+        with col1:
+            current_path = SaveManager.get_current_save_path()
+            if current_path:
+                if st.button("💾 Update Current Save", use_container_width=True, type="primary"):
+                    if SaveManager.perform_save_current():
+                        st.toast("✅ Experiment updated!", icon="✅")
+                        time.sleep(0.5)
+            else:
+                if st.button("💾 Save As New", use_container_width=True, type="primary"):
+                    SaveManager.show_save_as_dialog()
+
+        with col2:
+            if current_path:
+                filename = os.path.basename(current_path)
+                st.caption(f"📁 Current:")
+                st.caption(f"`{filename}`")
+
 
 ### METADATA INSTRUMENTAL ###
 
 def step_metadata_forms():
     """Step 2 page - Metadata forms instrumental"""
+
+    # Bouton Save persistant en haut
+    render_persistent_save_button()
+
     if "template_metadata" not in st.session_state:
         st.session_state["template_metadata"] = None
+
     st.header("Experience Metadata")
+
     original_metadata = reader.read_metadata()
     working_metadata = copy.deepcopy(original_metadata)
+
     try:
         st.session_state['template_metadata'] = original_metadata
         with st.container():
@@ -104,6 +194,7 @@ def step_metadata_forms():
             st.session_state["submit_enabled"] = all(st.session_state.required_form)
     except Exception as e:
         st.error(f"Error: {e}")
+
     # Re init without modification MetadataForms.generate_form()
     # To save the good template in .elablite
     st.session_state['template_metadata'] = original_metadata
@@ -127,7 +218,11 @@ def add_row(edited_df: pd.DataFrame):
 
 
 def step_metadata_files():
-    """Step 3 page - Manage metadata with datafiles files"""
+    """Step 3 page - Manage metadata with datafiles files - AVEC BOUTON SAVE PERSISTANT"""
+
+    # Bouton Save persistant en haut
+    render_persistent_save_button()
+
     st.session_state["submit_enabled"] = True
 
     st.header("Files Metadata Editor")
@@ -140,7 +235,7 @@ def step_metadata_files():
 hyphen (-) to show continuity. The underscore is used to separate parameters in the file name.
 - `LocalisationAnalysis` : description area to help locate and differentiate the analysis. If you later wish to keep 
 this parameter within the file name, it must not contain spaces or be too descriptive (e.g. *RedTopEnlighment*).
-        
+
 In this spreadsheet you can add cells (with the `+` button), delete cells or enlarge cells. If you wish to add a new
 cell and apply metadata. Ideally, select the first row and drag. Alternatively, you can copy/paste the line.
 
@@ -176,32 +271,89 @@ If you wish, you can return to the previous page to edit your template and add r
         if st.button("Add row", on_click=add_row, args=(edited_df,), help="Add a row with experimental parameters"):
             st.session_state["dataframe_metadata"] = edited_df
     with col1:
-        if st.button("Save", type="primary", disabled=st.session_state['has_changes']):
+        if st.button("Apply", type="primary", disabled=st.session_state['has_changes']):
             st.session_state["dataframe_metadata"] = edited_df
-            st.toast("Changes saved successfully!", icon="✅")
+
+            if SaveManager.perform_save_current():
+                st.toast("✅ Changes applied and saved!", icon="✅")
+            else:
+                st.toast("✅ Changes applied!", icon="✅")
+
             st.rerun()
 
 
 ### METADATA SAVING ###
 
 def step_metadata_download():
-    """Step 3 page - Metadata download to elablite format"""
-    filename = st.text_input("Filename", help='Enter the filename of your metadat preset. Ex: experience name')
-    if not filename.strip():
-        st.session_state["submit_enabled"] = True
-    else:
-        st.session_state["submit_enabled"] = False
+    """Step 4 page - Final export avec Save classique + Download"""
 
-    st.download_button(
-        label="Download elablite",
-        data=create_elablite(metadata_base=st.session_state["metadata_base"],
-                             form_data=st.session_state["form_data"],
-                             template_metadata=st.session_state["template_metadata"],
-                             dataframe_metadata=st.session_state["dataframe_metadata"]),
-        file_name=f"{filename}.elablite",
-        mime="application/octet-stream",
-        disabled=st.session_state["submit_enabled"]
-    )
+    st.header("💾 Final Export")
+
+    # Message explicatif
+    st.markdown("""
+    Your experiment is saved automatically as you work. Here you can:
+    - **Save** one last time to update your working file
+    - **Download** a copy to archive or share
+    """)
+
+    # Section 1 : Save classique
+    st.subheader("1. Save Working File")
+
+    col1, col2, col3 = st.columns([2, 2, 6])
+
+    with col1:
+        current_path = SaveManager.get_current_save_path()
+        if current_path:
+            if st.button("💾 Save", use_container_width=True, type="primary"):
+                if SaveManager.perform_save_current():
+                    st.toast("✅ Experiment saved!", icon="✅")
+                    time.sleep(0.5)
+                    st.rerun()
+        else:
+            if st.button("💾 Save As", use_container_width=True, type="primary"):
+                SaveManager.show_save_as_dialog()
+
+    with col2:
+        if current_path:
+            filename = os.path.basename(current_path)
+            st.caption(f"📁 **Current file:**")
+            st.caption(f"`{filename}`")
+        else:
+            st.caption("⚠️ No file saved yet")
+
+    st.divider()
+
+    # Section 2 : Download pour archivage
+    st.subheader("2. Download for Archive")
+
+    SaveManager.render_download_section()
+
+    st.divider()
+
+    # Section 3 : Recent saves
+    with st.expander("📋 Recent Saves", expanded=False):
+        from utils.manager import manage_temp_dir
+
+        templates_dir = manage_temp_dir(child='presets')
+        saves = sorted(
+            [f for f in os.listdir(templates_dir) if f.endswith('.elablite')],
+            key=lambda x: os.path.getmtime(os.path.join(templates_dir, x)),
+            reverse=True
+        )[:10]
+
+        if saves:
+            st.markdown("**Your recent experiment saves:**")
+            for save in saves:
+                mtime = os.path.getmtime(os.path.join(templates_dir, save))
+                mtime_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+
+                # Highlight current file
+                if current_path and save == os.path.basename(current_path):
+                    st.markdown(f"📄 **{save}** *(current)* - {mtime_str}")
+                else:
+                    st.text(f"📄 {save} - {mtime_str}")
+        else:
+            st.text("No recent saves found")
 
 
 ### INTERN PAGE MANAGEMENT ###
@@ -211,8 +363,12 @@ def display_forms():
     Displays forms based on the current step in the application flow.
     """
     st.info(f"""You are using the template `{st.session_state["selected_template"]}`""")
+
     current_step = st.session_state["step_metadata"]
+    WorkflowStepper.render(current_step, step_type="step")
+
     st.session_state["submit_enabled"] = False
+
     if current_step == "step_metadata_base":
         step_metadata_base()
     elif current_step == "step_metadata_forms":
