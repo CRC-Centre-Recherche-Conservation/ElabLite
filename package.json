@@ -1,13 +1,13 @@
 {
     "name": "ElabLite",
-    "version": "0.1.3-alpha",
+    "version": "0.1.5-alpha",
     "description": "An Streamlit desktop application for managing templates and forms to metadata.",
     "main": "./build/electron/main.js",
     "scripts": {
       "dump": "dump-stlite-desktop-artifacts",
       "serve": "cross-env NODE_ENV=production electron .",
-      "pack": "electron-builder --dir",
-      "dist": "electron-builder",
+      "app:dir": "electron-builder --dir",
+      "app:dist": "electron-builder",
       "postinstall": "electron-builder install-app-deps"
     },
     "build": {
@@ -28,10 +28,10 @@
     "author": "Centre de la recherche sur la conservation",
     "license": "MIT",
     "devDependencies": {
-      "@stlite/desktop": "^0.63.1",
+      "@stlite/desktop": "^0.79.5",
       "cross-env": "^7.0.3",
-      "electron": "30.0.8",
-      "electron-builder": "^24.13.3"
+      "electron": "34.3.0",
+      "electron-builder": "^25.1.8"
     },
     "stlite": {
       "desktop": {
